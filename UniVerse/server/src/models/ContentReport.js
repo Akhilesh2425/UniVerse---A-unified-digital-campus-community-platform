@@ -77,7 +77,6 @@ const contentReportSchema = new mongoose.Schema(
   }
 );
 
-// Compound unique index prevents same user reporting same item multiple times
 contentReportSchema.index({ reporter: 1, targetType: 1, targetId: 1 }, { unique: true });
 contentReportSchema.index({ status: 1, createdAt: -1 });
 

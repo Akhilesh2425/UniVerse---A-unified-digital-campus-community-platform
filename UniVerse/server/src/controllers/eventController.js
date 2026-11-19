@@ -3,17 +3,12 @@ import { Event } from '../models/Event.js';
 import { EventRegistration } from '../models/EventRegistration.js';
 import { EVENT_CATEGORIES, REGISTRATION_STATUS } from '../utils/constants.js';
 
-/**
- * Get all events with filtering, search, and sorting
- * GET /api/events
- */
 export const getEvents = async (req, res, next) => {
   try {
     const { search, category, timeframe = 'upcoming', sort = 'date-asc' } = req.query;
 
     const query = {};
 
-    // Search filter
     if (search && search.trim()) {
       const searchRegex = new RegExp(search.trim(), 'i');
       query.$or = [
@@ -23,14 +18,12 @@ export const getEvents = async (req, res, next) => {
       ];
     }
 
-    // Category filter
     if (category && category !== 'All') {
       if (EVENT_CATEGORIES.includes(category)) {
         query.category = category;
       }
     }
 
-    // Timeframe filter
     const now = new Date();
     if (timeframe === 'upcoming') {
       query.endDate = { $gte: now };
@@ -38,7 +31,6 @@ export const getEvents = async (req, res, next) => {
       query.endDate = { $lt: now };
     }
 
-    // Sorting
     let sortOption = { startDate: 1 };
     if (sort === 'date-desc') {
       sortOption = { startDate: -1 };
@@ -51,7 +43,6 @@ export const getEvents = async (req, res, next) => {
       .sort(sortOption)
       .lean();
 
-    // If user is authenticated, determine their registration status for each event
     let userRegistrationsMap = new Set();
     if (req.user) {
       const userRegistrations = await EventRegistration.find({
@@ -92,10 +83,6 @@ export const getEvents = async (req, res, next) => {
   }
 };
 
-/**
- * Get single event details by ID
- * GET /api/events/:id
- */
 export const getEventById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -149,10 +136,6 @@ export const getEventById = async (req, res, next) => {
   }
 };
 
-/**
- * Create a new event (Admin only)
- * POST /api/events
- */
 export const createEvent = async (req, res, next) => {
   try {
     const {
@@ -246,10 +229,6 @@ export const createEvent = async (req, res, next) => {
   }
 };
 
-/**
- * Update an existing event (Admin only)
- * PATCH /api/events/:id
- */
 export const updateEvent = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -352,10 +331,6 @@ export const updateEvent = async (req, res, next) => {
   }
 };
 
-/**
- * Delete an event and cascade-remove related registrations (Admin only)
- * DELETE /api/events/:id
- */
 export const deleteEvent = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -375,7 +350,6 @@ export const deleteEvent = async (req, res, next) => {
       });
     }
 
-    // Clean up related registration records consistently to avoid orphaned data
     const deletedRegistrations = await EventRegistration.deleteMany({ event: id });
     await Event.findByIdAndDelete(id);
 
@@ -388,10 +362,6 @@ export const deleteEvent = async (req, res, next) => {
   }
 };
 
-/**
- * Register for an event (Authenticated student)
- * POST /api/events/:id/register
- */
 export const registerForEvent = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -413,7 +383,6 @@ export const registerForEvent = async (req, res, next) => {
 
     const now = new Date();
 
-    // Check if event has already started
     if (now > event.startDate) {
       return res.status(400).json({
         success: false,
@@ -421,7 +390,6 @@ export const registerForEvent = async (req, res, next) => {
       });
     }
 
-    // Check registration deadline
     if (event.registrationDeadline && now > event.registrationDeadline) {
       return res.status(400).json({
         success: false,
@@ -429,7 +397,6 @@ export const registerForEvent = async (req, res, next) => {
       });
     }
 
-    // Check duplicate registration
     const existingRegistration = await EventRegistration.findOne({
       event: id,
       user: req.user._id,
@@ -444,8 +411,6 @@ export const registerForEvent = async (req, res, next) => {
       }
     }
 
-    // Atomic capacity increment to avoid race conditions:
-    // Only increment registeredCount if capacity is unlimited (null) OR registeredCount < maxCapacity
     const capacityCondition = {
       _id: id,
       $or: [
@@ -467,7 +432,6 @@ export const registerForEvent = async (req, res, next) => {
       });
     }
 
-    // Insert or update registration record
     let registration;
     try {
       if (existingRegistration) {
@@ -483,7 +447,6 @@ export const registerForEvent = async (req, res, next) => {
         });
       }
     } catch (regError) {
-      // If insertion fails (e.g. duplicate key race condition), decrement counter back
       await Event.findByIdAndUpdate(id, { $inc: { registeredCount: -1 } });
       throw regError;
     }
@@ -503,10 +466,6 @@ export const registerForEvent = async (req, res, next) => {
   }
 };
 
-/**
- * Cancel registration for an event (Authenticated student)
- * DELETE /api/events/:id/register
- */
 export const cancelRegistration = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -531,10 +490,8 @@ export const cancelRegistration = async (req, res, next) => {
       });
     }
 
-    // Delete or mark cancelled
     await EventRegistration.findByIdAndDelete(registration._id);
 
-    // Atomically decrement count on event
     const updatedEvent = await Event.findByIdAndUpdate(
       id,
       { $inc: { registeredCount: -1 } },
@@ -551,10 +508,6 @@ export const cancelRegistration = async (req, res, next) => {
   }
 };
 
-/**
- * Get all registrations for the authenticated student (My Events)
- * GET /api/events/my-registrations
- */
 export const getMyRegistrations = async (req, res, next) => {
   try {
     const registrations = await EventRegistration.find({
@@ -567,7 +520,6 @@ export const getMyRegistrations = async (req, res, next) => {
         populate: { path: 'createdBy', select: 'name email' },
       });
 
-    // Filter out registrations where event might have been deleted
     const validRegistrations = registrations
       .filter((reg) => reg.event !== null)
       .map((reg) => ({
@@ -587,10 +539,6 @@ export const getMyRegistrations = async (req, res, next) => {
   }
 };
 
-/**
- * Get attendee list for an event (Admin only)
- * GET /api/events/:id/registrations
- */
 export const getEventAttendees = async (req, res, next) => {
   try {
     const { id } = req.params;

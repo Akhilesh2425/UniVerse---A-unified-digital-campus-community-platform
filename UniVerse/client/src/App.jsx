@@ -6,7 +6,6 @@ import AdminRoute from './components/guards/AdminRoute';
 import PublicOnlyRoute from './components/guards/PublicOnlyRoute';
 import { useAuth } from './context/AuthContext';
 
-// Pages
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -19,14 +18,12 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminEventsPage from './pages/admin/AdminEventsPage';
 import AdminAnnouncementsPage from './pages/admin/AdminAnnouncementsPage';
 
-// Module 3: Groups & Communities Pages
 import GroupsListPage from './pages/groups/GroupsListPage';
 import GroupDetailsPage from './pages/groups/GroupDetailsPage';
 import CreateGroupPage from './pages/groups/CreateGroupPage';
 import EditGroupPage from './pages/groups/EditGroupPage';
 import MyGroupsPage from './pages/groups/MyGroupsPage';
 
-// Module 4: Discussions & Content Pages
 import DiscussionsFeedPage from './pages/discussions/DiscussionsFeedPage';
 import DiscussionDetailsPage from './pages/discussions/DiscussionDetailsPage';
 import CreateDiscussionPage from './pages/discussions/CreateDiscussionPage';
@@ -35,14 +32,33 @@ import MyDiscussionsPage from './pages/discussions/MyDiscussionsPage';
 import SavedDiscussionsPage from './pages/discussions/SavedDiscussionsPage';
 import ModerationReportsPage from './pages/admin/ModerationReportsPage';
 
-// Root redirect component
+import IssuesListPage from './pages/issues/IssuesListPage';
+import IssueDetailsPage from './pages/issues/IssueDetailsPage';
+import CreateIssuePage from './pages/issues/CreateIssuePage';
+import MyReportsPage from './pages/issues/MyReportsPage';
+import AdminIssuesPage from './pages/admin/AdminIssuesPage';
+
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminAuditLogsPage from './pages/admin/AdminAuditLogsPage';
+import NotificationsPage from './pages/notifications/NotificationsPage';
+import NotificationPreferencesPage from './pages/notifications/NotificationPreferencesPage';
+import SearchPage from './pages/search/SearchPage';
+import DiscoverPage from './pages/discover/DiscoverPage';
+
+import ClubsListPage from './pages/clubs/ClubsListPage';
+import ClubDetailsPage from './pages/clubs/ClubDetailsPage';
+import ProposeClubPage from './pages/clubs/ProposeClubPage';
+import AdminClubProposalsPage from './pages/admin/AdminClubProposalsPage';
+import FormsListPage from './pages/forms/FormsListPage';
+import FormWishlistPage from './pages/forms/FormWishlistPage';
+import CreateFormPage from './pages/forms/CreateFormPage';
+
 const RootRedirect = () => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return null;
   return <Navigate to={isAuthenticated ? '/dashboard' : '/events'} replace />;
 };
 
-// 404 Page
 const NotFoundPage = () => (
   <div className="py-24 text-center max-w-md mx-auto">
     <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-extrabold text-2xl mx-auto mb-4">
@@ -64,7 +80,6 @@ const NotFoundPage = () => (
 function App() {
   return (
     <Routes>
-      {/* Public Only Auth Routes */}
       <Route
         path="/login"
         element={
@@ -82,21 +97,24 @@ function App() {
         }
       />
 
-      {/* Main Application with AppLayout */}
       <Route element={<AppLayout />}>
-        {/* Root Redirect */}
         <Route path="/" element={<RootRedirect />} />
 
-        {/* Public / Semi-Public Discovery Routes */}
         <Route path="/events" element={<EventsListPage />} />
         <Route path="/events/:id" element={<EventDetailsPage />} />
         <Route path="/announcements" element={<AnnouncementsListPage />} />
         <Route path="/groups" element={<GroupsListPage />} />
         <Route path="/groups/:id" element={<GroupDetailsPage />} />
+        <Route path="/clubs" element={<ClubsListPage />} />
+        <Route path="/clubs/:id" element={<ClubDetailsPage />} />
+        <Route path="/forms" element={<FormsListPage />} />
         <Route path="/discussions" element={<DiscussionsFeedPage />} />
         <Route path="/discussions/:id" element={<DiscussionDetailsPage />} />
+        <Route path="/issues" element={<IssuesListPage />} />
+        <Route path="/issues/:issueId" element={<IssueDetailsPage />} />
+        <Route path="/discover" element={<DiscoverPage />} />
+        <Route path="/search" element={<SearchPage />} />
 
-        {/* Protected Authenticated Routes */}
         <Route
           path="/dashboard"
           element={
@@ -122,12 +140,27 @@ function App() {
           }
         />
 
-        {/* Module 3: Groups Authenticated Management */}
         <Route
           path="/groups/create"
           element={
             <ProtectedRoute>
               <CreateGroupPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/clubs/propose"
+          element={
+            <ProtectedRoute>
+              <ProposeClubPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/forms/wishlist"
+          element={
+            <ProtectedRoute>
+              <FormWishlistPage />
             </ProtectedRoute>
           }
         />
@@ -148,7 +181,6 @@ function App() {
           }
         />
 
-        {/* Module 4: Discussions Authenticated Management */}
         <Route
           path="/discussions/create"
           element={
@@ -182,12 +214,61 @@ function App() {
           }
         />
 
-        {/* Admin-Only Management Routes */}
+        <Route
+          path="/issues/create"
+          element={
+            <ProtectedRoute>
+              <CreateIssuePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/issues/my-reports"
+          element={
+            <ProtectedRoute>
+              <MyReportsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationPreferencesPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/admin"
           element={
             <AdminRoute>
               <AdminDashboardPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminUsersPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/audit-logs"
+          element={
+            <AdminRoute>
+              <AdminAuditLogsPage />
             </AdminRoute>
           }
         />
@@ -208,6 +289,14 @@ function App() {
           }
         />
         <Route
+          path="/admin/issues"
+          element={
+            <AdminRoute>
+              <AdminIssuesPage />
+            </AdminRoute>
+          }
+        />
+        <Route
           path="/moderation/reports"
           element={
             <AdminRoute>
@@ -215,8 +304,23 @@ function App() {
             </AdminRoute>
           }
         />
+        <Route
+          path="/admin/clubs"
+          element={
+            <AdminRoute>
+              <AdminClubProposalsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/forms/create"
+          element={
+            <AdminRoute>
+              <CreateFormPage />
+            </AdminRoute>
+          }
+        />
 
-        {/* 404 Fallback */}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

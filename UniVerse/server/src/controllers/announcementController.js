@@ -1,36 +1,39 @@
 import mongoose from 'mongoose';
 import { Announcement } from '../models/Announcement.js';
-import { ANNOUNCEMENT_CATEGORIES, ANNOUNCEMENT_PRIORITIES, ROLES } from '../utils/constants.js';
+import { User } from '../models/User.js';
+import {
+  ANNOUNCEMENT_CATEGORIES,
+  ANNOUNCEMENT_PRIORITIES,
+  ROLES,
+  NOTIFICATION_TYPES,
+  AUDIT_ACTIONS,
+} from '../utils/constants.js';
+import { createBulkNotifications } from '../services/notificationService.js';
+import { logAudit } from '../services/auditService.js';
+import { sendAnnouncementEmail } from '../services/emailService.js';
+import { NotificationPreference } from '../models/NotificationPreference.js';
 
-/**
- * Get all announcements with category, search, and publication filtering
- * GET /api/announcements
- */
 export const getAnnouncements = async (req, res, next) => {
   try {
     const { category, search, priority, includeDrafts } = req.query;
 
     const query = {};
 
-    // Security check: only administrators can view drafts / unpublished announcements
     const isAdmin = req.user && req.user.role === ROLES.ADMIN;
     if (!isAdmin || includeDrafts !== 'true') {
       query.isPublished = true;
     }
 
-    // Category filter
     if (category && category !== 'All') {
       if (ANNOUNCEMENT_CATEGORIES.includes(category)) {
         query.category = category;
       }
     }
 
-    // Priority filter
     if (priority && ANNOUNCEMENT_PRIORITIES.includes(priority)) {
       query.priority = priority;
     }
 
-    // Search filter
     if (search && search.trim()) {
       const searchRegex = new RegExp(search.trim(), 'i');
       query.$or = [
@@ -54,10 +57,6 @@ export const getAnnouncements = async (req, res, next) => {
   }
 };
 
-/**
- * Get single announcement by ID
- * GET /api/announcements/:id
- */
 export const getAnnouncementById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -78,7 +77,6 @@ export const getAnnouncementById = async (req, res, next) => {
       });
     }
 
-    // Security check: non-admins cannot view unpublished draft announcements
     const isAdmin = req.user && req.user.role === ROLES.ADMIN;
     if (!announcement.isPublished && !isAdmin) {
       return res.status(404).json({
@@ -96,10 +94,6 @@ export const getAnnouncementById = async (req, res, next) => {
   }
 };
 
-/**
- * Create a new announcement (Admin only)
- * POST /api/announcements
- */
 export const createAnnouncement = async (req, res, next) => {
   try {
     const { title, content, category, priority = 'normal', isPublished = true } = req.body;
@@ -137,6 +131,54 @@ export const createAnnouncement = async (req, res, next) => {
 
     const populated = await Announcement.findById(announcement._id).populate('author', 'name email role');
 
+    if (announcement.isPublished) {
+      try {
+        const students = await User.find({ role: ROLES.STUDENT }).select('_id');
+        const studentIds = students.map((s) => s._id);
+        await createBulkNotifications({
+          recipients: studentIds,
+          actor: req.user._id,
+          type: NOTIFICATION_TYPES.ANNOUNCEMENT_PUBLISHED,
+          title: `Announcement: ${announcement.title}`,
+          message: `${announcement.category} notice: ${announcement.content.slice(0, 100)}...`,
+          entityType: 'announcement',
+          entityId: announcement._id,
+          actionUrl: '/announcements',
+        });
+
+        await logAudit({
+          req,
+          actorId: req.user._id,
+          action: AUDIT_ACTIONS.ANNOUNCEMENT_PUBLISH,
+          targetType: 'Announcement',
+          targetId: announcement._id,
+          description: `Published campus announcement "${announcement.title}" (${announcement.category}).`,
+          metadata: { priority: announcement.priority, category: announcement.category },
+        });
+
+        try {
+          const optedInPrefs = await NotificationPreference.find({ emailAnnouncements: true }).select('user');
+          const optedInIds = optedInPrefs.map((p) => p.user);
+          const emailRecipients = await User.find({ _id: { $in: optedInIds }, status: 'active' }).select('email');
+
+          for (const recipient of emailRecipients) {
+            sendAnnouncementEmail({
+              to: recipient.email,
+              recipientId: recipient._id,
+              title: announcement.title,
+              content: announcement.content,
+              priority: announcement.priority,
+              announcementId: announcement._id,
+            }).catch(() => {});
+          }
+        } catch (emailErr) {
+          console.error('Announcement email dispatch error:', emailErr.message);
+        }
+      } catch (err) {
+        console.error('Error triggering announcement notification:', err.message);
+      }
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Announcement created successfully.',
@@ -147,10 +189,6 @@ export const createAnnouncement = async (req, res, next) => {
   }
 };
 
-/**
- * Update an announcement (Admin only)
- * PATCH /api/announcements/:id
- */
 export const updateAnnouncement = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -220,10 +258,6 @@ export const updateAnnouncement = async (req, res, next) => {
   }
 };
 
-/**
- * Delete an announcement (Admin only)
- * DELETE /api/announcements/:id
- */
 export const deleteAnnouncement = async (req, res, next) => {
   try {
     const { id } = req.params;

@@ -94,7 +94,6 @@ const DiscussionCard = ({
     const prevVoted = hasUpvoted;
     const prevCount = upvoteCount;
 
-    // Optimistic toggle
     setHasUpvoted(!prevVoted);
     setUpvoteCount(prevVoted ? Math.max(0, prevCount - 1) : prevCount + 1);
 
@@ -110,7 +109,6 @@ const DiscussionCard = ({
       }
       if (onVoteChange) onVoteChange(discussion.id || discussion._id, !prevVoted);
     } catch {
-      // Revert on failure
       setHasUpvoted(prevVoted);
       setUpvoteCount(prevCount);
     } finally {
@@ -151,16 +149,15 @@ const DiscussionCard = ({
 
   return (
     <>
-      <article className="group bg-white rounded-2xl border border-slate-200/80 hover:border-indigo-300 p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between">
+      <article className="group bg-white dark:bg-[#172033] rounded-2xl border border-slate-200/90 dark:border-[#334155] hover:border-brand-400 dark:hover:border-brand-500/50 p-5 shadow-xs transition-all duration-200 flex flex-col justify-between">
         <div>
-          {/* Header row: Author, Date & Badges */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2.5">
               {discussion.author?.avatarUrl ? (
                 <img
                   src={discussion.author.avatarUrl}
                   alt={discussion.author.name}
-                  className="w-9 h-9 rounded-full object-cover ring-2 ring-slate-100"
+                  className="w-9 h-9 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-800"
                   onError={(e) => {
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.display = 'flex';
@@ -168,7 +165,7 @@ const DiscussionCard = ({
                 />
               ) : null}
               <div
-                className={`w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-100 to-indigo-50 text-indigo-700 font-bold text-xs flex items-center justify-center ring-2 ring-slate-100 ${
+                className={`w-9 h-9 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold text-xs flex items-center justify-center ring-2 ring-brand-500/20 ${
                   discussion.author?.avatarUrl ? 'hidden' : 'flex'
                 }`}
               >
@@ -177,26 +174,25 @@ const DiscussionCard = ({
 
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-800">
+                  <span className="text-xs font-bold text-slate-800 dark:text-white">
                     {discussion.author?.name || 'Campus Student'}
                   </span>
                   {discussion.author?.role === 'admin' && (
-                    <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[9px] font-bold uppercase">
+                    <span className="px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[9px] font-bold uppercase">
                       Admin
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-slate-400 font-medium">
+                <div className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
                   {discussion.author?.department && `${discussion.author.department} • `}
                   {formatRelativeTime(discussion.createdAt)}
                 </div>
               </div>
             </div>
 
-            {/* Badges */}
             <div className="flex items-center gap-1.5 flex-wrap justify-end">
               {isResolved && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Resolved
                 </span>
@@ -213,17 +209,15 @@ const DiscussionCard = ({
             </div>
           </div>
 
-          {/* Title & Preview Excerpt */}
           <Link to={`/discussions/${discussion.id || discussion._id}`} className="block mb-2 group/title">
-            <h3 className="text-base font-bold text-slate-900 group-hover/title:text-indigo-600 transition-colors line-clamp-2 leading-snug">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover/title:text-brand-600 dark:group-hover/title:text-brand-400 transition-colors line-clamp-2 leading-snug">
               {discussion.title}
             </h3>
-            <p className="text-xs text-slate-600 mt-1.5 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 line-clamp-2 leading-relaxed">
               {discussion.content}
             </p>
           </Link>
 
-          {/* Optional external link / media tag */}
           {discussion.resourceUrl && (
             <div className="mb-3">
               <a
@@ -231,7 +225,7 @@ const DiscussionCard = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1.5 text-[11px] font-medium text-indigo-600 bg-indigo-50/70 hover:bg-indigo-100/70 px-2.5 py-1 rounded-lg transition"
+                className="inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-600 dark:text-brand-400 bg-brand-50/70 dark:bg-brand-950/40 hover:bg-brand-100/70 dark:hover:bg-brand-900/60 px-2.5 py-1 rounded-lg transition"
               >
                 <ExternalLink className="w-3 h-3" />
                 <span className="truncate max-w-xs">{discussion.resourceUrl}</span>
@@ -239,13 +233,12 @@ const DiscussionCard = ({
             </div>
           )}
 
-          {/* Tags */}
           {discussion.tags && discussion.tags.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap mb-4">
               {discussion.tags.slice(0, 5).map((t, idx) => (
                 <span
                   key={idx}
-                  className="text-[10px] font-medium px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 transition"
+                  className="text-[10px] font-medium px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition"
                 >
                   #{t}
                 </span>
@@ -254,18 +247,16 @@ const DiscussionCard = ({
           )}
         </div>
 
-        {/* Footer Actions: Votes, Comments, Views, Save, Report */}
-        <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-2">
+        <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 mt-2">
           <div className="flex items-center gap-2">
-            {/* Upvote Button */}
             <button
               type="button"
               onClick={handleVote}
               disabled={voteLoading}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
                 hasUpvoted
-                  ? 'bg-indigo-600 text-white shadow-xs shadow-indigo-200'
-                  : 'bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200'
+                  ? 'bg-brand-600 text-white shadow-xs shadow-brand-500/20'
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-brand-950/50 hover:text-brand-600 dark:hover:text-brand-400 border border-slate-200 dark:border-slate-700'
               }`}
               title={hasUpvoted ? 'Remove upvote' : 'Upvote discussion'}
             >
@@ -273,10 +264,9 @@ const DiscussionCard = ({
               <span>{upvoteCount}</span>
             </button>
 
-            {/* Comment Count */}
             <Link
               to={`/discussions/${discussion.id || discussion._id}#comments`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition"
               title="View comments & answers"
             >
               <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
@@ -285,9 +275,8 @@ const DiscussionCard = ({
               </span>
             </Link>
 
-            {/* Views counter */}
             {discussion.views > 0 && (
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-slate-400 pl-1">
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-slate-400 dark:text-slate-500 pl-1">
                 <Eye className="w-3 h-3" />
                 {discussion.views}
               </span>
@@ -295,41 +284,38 @@ const DiscussionCard = ({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* Bookmark / Save */}
             <button
               type="button"
               onClick={handleSave}
               disabled={saveLoading}
               className={`p-1.5 rounded-lg text-xs transition ${
                 hasSaved
-                  ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
-                  : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+                  ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40'
+                  : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
               title={hasSaved ? 'Saved in your bookmarks' : 'Save to bookmarks'}
             >
-              <Bookmark className={`w-4 h-4 ${hasSaved ? 'fill-amber-600' : ''}`} />
+              <Bookmark className={`w-4 h-4 ${hasSaved ? 'fill-amber-600 dark:fill-amber-400' : ''}`} />
             </button>
 
-            {/* Report */}
             {isAuthenticated && (
               <button
                 type="button"
                 onClick={() => setReportModalOpen(true)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
                 title="Report inappropriate content"
               >
                 <Flag className="w-3.5 h-3.5" />
               </button>
             )}
 
-            {/* Author Controls (Edit / Delete) when rendered on My Posts */}
             {showAuthorControls && (
-              <div className="flex items-center gap-1 border-l border-slate-200 pl-2 ml-1">
+              <div className="flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-2 ml-1">
                 {onEdit && (
                   <button
                     type="button"
                     onClick={() => onEdit(discussion)}
-                    className="px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 rounded-lg transition"
+                    className="px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
                   >
                     Edit
                   </button>
@@ -338,7 +324,7 @@ const DiscussionCard = ({
                   <button
                     type="button"
                     onClick={() => onDelete(discussion)}
-                    className="px-2.5 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                    className="px-2.5 py-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
                   >
                     Delete
                   </button>

@@ -43,6 +43,15 @@ const groupSchema = new mongoose.Schema(
       enum: Object.values(GROUP_VISIBILITY),
       default: GROUP_VISIBILITY.PUBLIC,
     },
+    membershipApprovalRequired: {
+      type: Boolean,
+      default: false,
+    },
+    type: {
+      type: String,
+      enum: ['personal', 'club'],
+      default: 'personal',
+    },
     rules: {
       type: [String],
       default: [],
@@ -75,7 +84,6 @@ const groupSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for search, category filtering, and sorting
 groupSchema.index({ category: 1 });
 groupSchema.index({ visibility: 1 });
 groupSchema.index({ memberCount: -1 });

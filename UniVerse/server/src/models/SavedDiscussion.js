@@ -26,7 +26,6 @@ const savedDiscussionSchema = new mongoose.Schema(
   }
 );
 
-// Compound unique index prevents duplicate saved entries for same user and post
 savedDiscussionSchema.index({ post: 1, user: 1 }, { unique: true });
 savedDiscussionSchema.index({ user: 1, createdAt: -1 });
 

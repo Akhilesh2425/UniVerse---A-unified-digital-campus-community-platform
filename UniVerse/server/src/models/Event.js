@@ -37,7 +37,6 @@ const eventSchema = new mongoose.Schema(
       required: [true, 'End date and time are required'],
       validate: {
         validator: function (value) {
-          // Validate endDate >= startDate
           return !this.startDate || value >= this.startDate;
         },
         message: 'End date and time must be after start date and time',
@@ -49,7 +48,7 @@ const eventSchema = new mongoose.Schema(
     },
     maxCapacity: {
       type: Number,
-      default: null, // null represents unlimited capacity
+      default: null, 
       min: [1, 'Maximum capacity must be at least 1 if specified'],
     },
     registeredCount: {
@@ -67,6 +66,16 @@ const eventSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'Creator reference is required'],
     },
+    club: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'CollegeClub',
+      default: null,
+      index: true,
+    },
+    isClubEvent: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -80,7 +89,6 @@ const eventSchema = new mongoose.Schema(
   }
 );
 
-// Virtual helper to check if registration is currently open
 eventSchema.virtual('isRegistrationOpen').get(function () {
   const now = new Date();
   if (this.registrationDeadline && now > this.registrationDeadline) {
@@ -95,15 +103,13 @@ eventSchema.virtual('isRegistrationOpen').get(function () {
   return true;
 });
 
-// Virtual helper for remaining spots
 eventSchema.virtual('remainingSpots').get(function () {
   if (this.maxCapacity === null || this.maxCapacity === undefined) {
-    return null; // Unlimited
+    return null; 
   }
   return Math.max(0, this.maxCapacity - this.registeredCount);
 });
 
-// Indexes for query optimization
 eventSchema.index({ startDate: 1 });
 eventSchema.index({ category: 1 });
 eventSchema.index({ title: 'text', description: 'text' });

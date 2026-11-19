@@ -60,27 +60,22 @@ const DiscussionDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Interaction states
   const [hasUpvoted, setHasUpvoted] = useState(false);
   const [upvoteCount, setUpvoteCount] = useState(0);
   const [hasSaved, setHasSaved] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Comment input
   const [newComment, setNewComment] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [commentError, setCommentError] = useState(null);
 
-  // Inline editing comment
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingContent, setEditingContent] = useState('');
 
-  // Modals & Dialogs
   const [deletePostDialogOpen, setDeletePostDialogOpen] = useState(false);
   const [deleteCommentTarget, setDeleteCommentTarget] = useState(null);
   const [reportModalData, setReportModalData] = useState({ open: false, commentId: null });
 
-  // Fetch discussion & comments
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -109,7 +104,6 @@ const DiscussionDetailsPage = () => {
     loadData();
   }, [loadData]);
 
-  // Vote handler
   const handleVote = async () => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -138,7 +132,6 @@ const DiscussionDetailsPage = () => {
     }
   };
 
-  // Save handler
   const handleSave = async () => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -161,14 +154,12 @@ const DiscussionDetailsPage = () => {
     }
   };
 
-  // Copy link
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Delete discussion
   const handleDeleteDiscussion = async () => {
     try {
       await discussionApi.deleteDiscussion(id);
@@ -178,7 +169,6 @@ const DiscussionDetailsPage = () => {
     }
   };
 
-  // Add Comment
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim() || newComment.trim().length < 2) return;
@@ -201,7 +191,6 @@ const DiscussionDetailsPage = () => {
     }
   };
 
-  // Delete Comment
   const handleDeleteComment = async () => {
     if (!deleteCommentTarget) return;
 
@@ -218,7 +207,6 @@ const DiscussionDetailsPage = () => {
     }
   };
 
-  // Save edit comment
   const handleSaveEditComment = async (commentId) => {
     if (!editingContent.trim() || editingContent.trim().length < 2) return;
 
@@ -236,7 +224,6 @@ const DiscussionDetailsPage = () => {
     }
   };
 
-  // Toggle accepted answer (Question posts only)
   const handleToggleAcceptedAnswer = async (comment) => {
     const isCurrentlyAccepted = comment.isAcceptedAnswer;
     const targetCommentId = isCurrentlyAccepted ? null : comment._id;
@@ -249,7 +236,6 @@ const DiscussionDetailsPage = () => {
         acceptedAnswer: res.acceptedAnswer,
       }));
 
-      // Update comments list
       setComments((prev) =>
         prev.map((c) => ({
           ...c,
@@ -265,7 +251,7 @@ const DiscussionDetailsPage = () => {
     return (
       <div className="py-24 flex flex-col items-center justify-center space-y-3">
         <Spinner size="lg" />
-        <p className="text-xs font-semibold text-slate-500">Loading discussion...</p>
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Loading discussion...</p>
       </div>
     );
   }
@@ -273,14 +259,14 @@ const DiscussionDetailsPage = () => {
   if (error || !discussion) {
     return (
       <div className="py-16 text-center max-w-md mx-auto space-y-4">
-        <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
           <AlertCircle className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900">Discussion Not Found</h2>
-        <p className="text-xs text-slate-500">{error || 'This post may have been removed.'}</p>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Discussion Not Found</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{error || 'This post may have been removed.'}</p>
         <Link
           to="/discussions"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-700 transition shadow-md"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Discussions Feed
@@ -297,11 +283,10 @@ const DiscussionDetailsPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Navigation Breadcrumb */}
       <div className="flex items-center justify-between">
         <Link
           to="/discussions"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Feed</span>
@@ -311,7 +296,7 @@ const DiscussionDetailsPage = () => {
           <div className="flex items-center gap-2">
             <Link
               to={`/discussions/${id}/edit`}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
             >
               <Edit3 className="w-3.5 h-3.5 text-slate-500" />
               <span>Edit Post</span>
@@ -319,7 +304,7 @@ const DiscussionDetailsPage = () => {
             <button
               type="button"
               onClick={() => setDeletePostDialogOpen(true)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-rose-200 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-800 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Delete</span>
@@ -328,34 +313,32 @@ const DiscussionDetailsPage = () => {
         )}
       </div>
 
-      {/* Main Discussion Article Card */}
-      <article className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-        {/* Header: Author & Metadata */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-100">
+      <article className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
             {discussion.author?.avatarUrl ? (
               <img
                 src={discussion.author.avatarUrl}
                 alt={discussion.author.name}
-                className="w-11 h-11 rounded-full object-cover ring-2 ring-indigo-50"
+                className="w-11 h-11 rounded-full object-cover ring-2 ring-brand-500/20"
               />
             ) : (
-              <div className="w-11 h-11 rounded-full bg-indigo-100 text-indigo-700 font-bold text-sm flex items-center justify-center ring-2 ring-indigo-50">
+              <div className="w-11 h-11 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold text-sm flex items-center justify-center ring-2 ring-brand-500/20">
                 {discussion.author?.name ? discussion.author.name.charAt(0).toUpperCase() : 'U'}
               </div>
             )}
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-slate-900">
+                <span className="text-sm font-bold text-slate-900 dark:text-white">
                   {discussion.author?.name || 'Campus Student'}
                 </span>
                 {discussion.author?.role === 'admin' && (
-                  <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold uppercase">
+                  <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 text-[10px] font-bold uppercase">
                     Admin
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
                 {discussion.author?.department && `${discussion.author.department} • `}
                 {formatRelativeTime(discussion.createdAt)}
               </p>
@@ -364,7 +347,7 @@ const DiscussionDetailsPage = () => {
 
           <div className="flex items-center gap-2 flex-wrap">
             {discussion.isResolved && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
                 <CheckCircle2 className="w-4 h-4" />
                 Resolved Question
               </span>
@@ -379,15 +362,13 @@ const DiscussionDetailsPage = () => {
           </div>
         </div>
 
-        {/* Title & Content */}
         <div className="space-y-4">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
             {discussion.title}
           </h1>
 
-          {/* Optional Cover Image */}
           {discussion.imageUrl && (
-            <div className="rounded-2xl overflow-hidden border border-slate-200 max-h-96">
+            <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 max-h-96">
               <img
                 src={discussion.imageUrl}
                 alt={discussion.title}
@@ -399,19 +380,17 @@ const DiscussionDetailsPage = () => {
             </div>
           )}
 
-          {/* Body Content */}
-          <div className="text-sm sm:text-base text-slate-800 leading-relaxed whitespace-pre-wrap font-sans">
+          <div className="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap font-sans">
             {discussion.content}
           </div>
 
-          {/* Optional External Resource Card */}
           {discussion.resourceUrl && (
-            <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex items-center justify-between gap-3">
+            <div className="p-4 rounded-2xl bg-brand-50/60 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-900/60 flex items-center justify-between gap-3">
               <div className="space-y-0.5 min-w-0">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-700">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-brand-700 dark:text-brand-300">
                   Attached Educational Resource
                 </span>
-                <p className="text-xs font-semibold text-slate-800 truncate">
+                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
                   {discussion.resourceUrl}
                 </p>
               </div>
@@ -419,7 +398,7 @@ const DiscussionDetailsPage = () => {
                 href={discussion.resourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition shrink-0"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-xs transition shrink-0"
               >
                 <span>Visit Link</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -427,13 +406,12 @@ const DiscussionDetailsPage = () => {
             </div>
           )}
 
-          {/* Tags */}
           {discussion.tags && discussion.tags.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap pt-2">
               {discussion.tags.map((t, idx) => (
                 <span
                   key={idx}
-                  className="text-xs font-medium px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg"
+                  className="text-xs font-medium px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg"
                 >
                   #{t}
                 </span>
@@ -442,49 +420,45 @@ const DiscussionDetailsPage = () => {
           )}
         </div>
 
-        {/* Action Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-slate-100">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            {/* Upvote Button */}
             <button
               type="button"
               onClick={handleVote}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
                 hasUpvoted
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
-                  : 'bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-600'
+                  ? 'bg-brand-600 text-white shadow-sm shadow-brand-500/20'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-brand-950/50 hover:text-brand-600 dark:hover:text-brand-400'
               }`}
             >
               <ThumbsUp className={`w-4 h-4 ${hasUpvoted ? 'fill-white' : ''}`} />
               <span>{upvoteCount} Upvotes</span>
             </button>
 
-            {/* Save / Bookmark Button */}
             <button
               type="button"
               onClick={handleSave}
               className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition ${
                 hasSaved
-                  ? 'border-amber-300 bg-amber-50 text-amber-800'
-                  : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  ? 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300'
+                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
-              <Bookmark className={`w-4 h-4 ${hasSaved ? 'fill-amber-600' : ''}`} />
+              <Bookmark className={`w-4 h-4 ${hasSaved ? 'fill-amber-600 dark:fill-amber-400' : ''}`} />
               <span>{hasSaved ? 'Saved' : 'Save'}</span>
             </button>
 
-            {/* Share Link Button */}
             <button
               type="button"
               onClick={handleShare}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Share2 className="w-4 h-4" />}
               <span>{copied ? 'Copied!' : 'Share'}</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-3 text-xs text-slate-400">
+          <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
             {discussion.views > 0 && (
               <span className="flex items-center gap-1">
                 <Eye className="w-3.5 h-3.5" />
@@ -494,7 +468,7 @@ const DiscussionDetailsPage = () => {
             <button
               type="button"
               onClick={() => setReportModalData({ open: true, commentId: null })}
-              className="flex items-center gap-1 text-slate-400 hover:text-rose-600 transition"
+              className="flex items-center gap-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition"
               title="Report this discussion"
             >
               <Flag className="w-3.5 h-3.5" />
@@ -504,28 +478,26 @@ const DiscussionDetailsPage = () => {
         </div>
       </article>
 
-      {/* Comments & Answers Section */}
-      <section id="comments" className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+      <section id="comments" className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <MessageSquare className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-lg font-bold text-slate-900">
+            <MessageSquare className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
               {comments.length} {isQuestion ? 'Answers & Solutions' : 'Comments & Replies'}
             </h2>
           </div>
 
           {isQuestion && (
-            <span className="text-xs text-slate-400 hidden sm:inline">
+            <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline">
               Author can mark the best answer as Accepted
             </span>
           )}
         </div>
 
-        {/* Comment Form */}
         {isAuthenticated ? (
           <form onSubmit={handleAddComment} className="space-y-3">
             {commentError && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300">
                 {commentError}
               </div>
             )}
@@ -539,16 +511,16 @@ const DiscussionDetailsPage = () => {
                   : 'Add to the conversation or share your perspective...'
               }
               required
-              className="w-full text-xs sm:text-sm p-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition leading-relaxed"
+              className="w-full text-xs sm:text-sm p-3.5 rounded-2xl border border-slate-200 dark:border-[#334155] bg-white dark:bg-[#1E293B] text-slate-900 dark:text-[#F1F5F9] placeholder:text-slate-400 dark:placeholder:text-[#64748B] focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition leading-relaxed"
             />
             <div className="flex justify-between items-center">
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">
                 Be constructive and adhere to campus guidelines
               </span>
               <button
                 type="submit"
                 disabled={commentSubmitting || !newComment.trim()}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50"
+                className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50"
               >
                 {commentSubmitting
                   ? 'Posting...'
@@ -559,23 +531,22 @@ const DiscussionDetailsPage = () => {
             </div>
           </form>
         ) : (
-          <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex items-center justify-between gap-3 text-xs">
-            <span className="text-slate-600">
+          <div className="p-4 rounded-2xl bg-brand-50/50 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900 flex items-center justify-between gap-3 text-xs">
+            <span className="text-slate-600 dark:text-slate-300">
               Want to contribute to this discussion or answer this question?
             </span>
             <Link
               to="/login"
-              className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition"
+              className="px-4 py-2 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition"
             >
               Log in to Reply
             </Link>
           </div>
         )}
 
-        {/* Comments List */}
         <div className="space-y-4 pt-2">
           {comments.length === 0 ? (
-            <div className="text-center py-8 text-xs text-slate-400">
+            <div className="text-center py-8 text-xs text-slate-400 dark:text-slate-500">
               {isQuestion
                 ? 'No answers yet. Be the first to provide a helpful answer!'
                 : 'No comments yet. Start the conversation above.'}
@@ -593,11 +564,10 @@ const DiscussionDetailsPage = () => {
                   key={c._id}
                   className={`p-4 sm:p-5 rounded-2xl border transition ${
                     isAccepted
-                      ? 'border-emerald-300 bg-emerald-50/40 ring-2 ring-emerald-500/20'
-                      : 'border-slate-100 bg-slate-50/50 hover:bg-slate-50'
+                      ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-950/40 ring-2 ring-emerald-500/20'
+                      : 'border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
-                  {/* Accepted Answer Banner Badge */}
                   {isAccepted && (
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white text-[11px] font-bold mb-3 shadow-xs">
                       <Award className="w-3.5 h-3.5" />
@@ -605,44 +575,42 @@ const DiscussionDetailsPage = () => {
                     </div>
                   )}
 
-                  {/* Comment Header */}
                   <div className="flex items-center justify-between gap-3 mb-2.5">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold text-xs flex items-center justify-center">
                         {c.author?.name ? c.author.name.charAt(0).toUpperCase() : 'U'}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-slate-900">
+                          <span className="text-xs font-bold text-slate-900 dark:text-white">
                             {c.author?.name || 'Student'}
                           </span>
                           {c.author?.role === 'admin' && (
-                            <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[9px] font-bold uppercase">
+                            <span className="px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[9px] font-bold uppercase">
                               Admin
                             </span>
                           )}
                           {discussion.author?._id === c.author?._id && (
-                            <span className="px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 text-[9px] font-bold uppercase">
+                            <span className="px-1.5 py-0.2 rounded bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 text-[9px] font-bold uppercase">
                               Author
                             </span>
                           )}
                         </div>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">
                           {formatRelativeTime(c.createdAt)}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      {/* Mark / Unmark Accepted Answer Button for question author/admin */}
                       {isQuestion && canMarkAccepted && (
                         <button
                           type="button"
                           onClick={() => handleToggleAcceptedAnswer(c)}
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
                             isAccepted
-                              ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                              : 'bg-white border border-slate-200 text-slate-600 hover:border-emerald-400 hover:text-emerald-700'
+                              ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200'
+                              : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-400 hover:text-emerald-700'
                           }`}
                           title={isAccepted ? 'Click to unmark accepted answer' : 'Mark as Accepted Answer'}
                         >
@@ -651,7 +619,6 @@ const DiscussionDetailsPage = () => {
                         </button>
                       )}
 
-                      {/* Comment Edit/Delete Actions */}
                       {canModifyComment && !isEditing && (
                         <>
                           <button
@@ -660,7 +627,7 @@ const DiscussionDetailsPage = () => {
                               setEditingCommentId(c._id);
                               setEditingContent(c.content);
                             }}
-                            className="p-1 text-slate-400 hover:text-indigo-600 rounded transition"
+                            className="p-1 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 rounded transition"
                             title="Edit Comment"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -668,7 +635,7 @@ const DiscussionDetailsPage = () => {
                           <button
                             type="button"
                             onClick={() => setDeleteCommentTarget(c)}
-                            className="p-1 text-slate-400 hover:text-rose-600 rounded transition"
+                            className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded transition"
                             title="Delete Comment"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -676,50 +643,48 @@ const DiscussionDetailsPage = () => {
                         </>
                       )}
 
-                      {/* Report Comment */}
                       {isAuthenticated && !isCommentAuthor && (
                         <button
                           type="button"
                           onClick={() =>
                             setReportModalData({ open: true, commentId: c._id })
                           }
-                          className="p-1 text-slate-400 hover:text-rose-600 rounded transition"
+                          className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded transition"
                           title="Report Comment"
                         >
-                          <Flag className="w-3 h-3" />
+                          <Flag className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
                   </div>
 
-                  {/* Comment Body */}
                   {isEditing ? (
                     <div className="space-y-2 mt-2">
                       <textarea
                         rows={3}
                         value={editingContent}
                         onChange={(e) => setEditingContent(e.target.value)}
-                        className="w-full text-xs p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full text-xs p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                       />
                       <div className="flex items-center justify-end gap-2">
                         <button
                           type="button"
                           onClick={() => setEditingCommentId(null)}
-                          className="px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
+                          className="px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
                         >
                           Cancel
                         </button>
                         <button
                           type="button"
                           onClick={() => handleSaveEditComment(c._id)}
-                          className="px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                          className="px-3 py-1 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 transition"
                         >
                           Save Changes
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-wrap pl-1">
+                    <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap pl-1">
                       {c.content}
                     </p>
                   )}
@@ -730,7 +695,6 @@ const DiscussionDetailsPage = () => {
         </div>
       </section>
 
-      {/* Delete Post Confirm Dialog */}
       <ConfirmDialog
         isOpen={deletePostDialogOpen}
         onClose={() => setDeletePostDialogOpen(false)}
@@ -741,7 +705,6 @@ const DiscussionDetailsPage = () => {
         danger
       />
 
-      {/* Delete Comment Confirm Dialog */}
       <ConfirmDialog
         isOpen={!!deleteCommentTarget}
         onClose={() => setDeleteCommentTarget(null)}
@@ -752,7 +715,6 @@ const DiscussionDetailsPage = () => {
         danger
       />
 
-      {/* Report Modal */}
       <ReportModal
         isOpen={reportModalData.open}
         onClose={() => setReportModalData({ open: false, commentId: null })}

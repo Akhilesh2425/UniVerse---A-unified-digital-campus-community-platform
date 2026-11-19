@@ -34,3 +34,7 @@ artifacts/
 *.backup.pptx
 .system_generated/
 *.metadata.json
+
+# Archives
+*.zip
+**/*.zip

@@ -39,7 +39,6 @@ const groupJoinRequestSchema = new mongoose.Schema(
   }
 );
 
-// Indexes to quickly find pending requests and prevent duplicate pending requests
 groupJoinRequestSchema.index({ group: 1, user: 1 });
 groupJoinRequestSchema.index({ group: 1, status: 1 });
 groupJoinRequestSchema.index({ user: 1, status: 1 });

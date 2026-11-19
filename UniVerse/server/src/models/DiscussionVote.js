@@ -26,7 +26,6 @@ const discussionVoteSchema = new mongoose.Schema(
   }
 );
 
-// Compound unique index prevents duplicate votes from the same user on the same post
 discussionVoteSchema.index({ post: 1, user: 1 }, { unique: true });
 
 export const DiscussionVote = mongoose.model('DiscussionVote', discussionVoteSchema);

@@ -1,9 +1,6 @@
 import mongoose from 'mongoose';
 import dns from 'dns';
 
-/**
- * Connect to MongoDB Atlas or local MongoDB instance
- */
 export const connectDB = async () => {
   const uri = process.env.MONGO_URI;
 
@@ -13,17 +10,14 @@ export const connectDB = async () => {
     throw new Error(errorMsg);
   }
 
-  // Use system DNS resolver by default for reliable SRV lookups
-
-  // Mask URI credentials in logs to prevent password leakage
   const maskedUri = uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@');
   console.log(`[Database] Attempting connection to MongoDB (${maskedUri})...`);
 
   try {
     const conn = await mongoose.connect(uri, {
-      autoIndex: true, // Build indexes defined in schemas
+      autoIndex: true, 
       dbName: process.env.DB_NAME || 'universe',
-      serverSelectionTimeoutMS: 10000, // 10 seconds timeout
+      serverSelectionTimeoutMS: 10000, 
     });
 
     console.log(`[Database] MongoDB connected successfully to host: ${conn.connection.host} (DB: ${conn.connection.name})`);
@@ -43,9 +37,6 @@ export const connectDB = async () => {
   }
 };
 
-/**
- * Get current database connection status for health checks
- */
 export const getConnectionStatus = () => {
   const state = mongoose.connection.readyState;
   const states = {
@@ -63,9 +54,6 @@ export const getConnectionStatus = () => {
   };
 };
 
-/**
- * Close database connection gracefully
- */
 export const closeDB = async () => {
   try {
     await mongoose.connection.close();

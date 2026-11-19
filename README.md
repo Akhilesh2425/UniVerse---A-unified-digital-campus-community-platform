@@ -88,9 +88,14 @@ npm run dev
 
 ## 📚 Platform Modules
 
-- **Module 1: Authentication & User Profiles** — Secure JWT authentication, password hashing with bcrypt, role-based access control (`student` & `admin`), profile management.
+- **Module 1: Authentication & User Profiles** — Secure JWT authentication, password hashing with bcrypt, role-based access control (`student` & `admin`), profile management, password reset OTP.
 - **Module 2: Campus Events & Official Announcements** — Event discovery, atomic RSVP registration, capacity tracking, priority campus notices.
-- **Module 3: Student Groups & Communities** — Public/private community hubs, membership roles (Owner, Moderator, Member), join requests, group threads.
-- **Module 4: Discussions & Content Platform** — Campus-wide discussion forums, category filtering, threaded comments, voting (upvotes/downvotes), bookmarks, reporting, and moderation dashboard.
+- **Module 3: Student Groups & Communities** — Public/private community hubs, membership roles (Owner, Moderator, Member), join requests, group discussions & shared study resources.
+- **Module 4: Discussions & Knowledge Base** — Campus-wide Q&A discussion forums, accepted answers, category filtering, threaded comments, upvoting, bookmarks, reporting, and moderation dashboard.
+- **Module 5: Campus Issues & Infrastructure Ticketing** — Grievance reporting, status workflow tracking, image proof attachments, community upvoting, department assignment, and student satisfaction feedback.
+- **Module 6: College Clubs & Student Proposals** — Student club proposals, administrative review lifecycle, automatic club formation, and faculty advisor management.
+- **Module 7: Dynamic Student Forms & Opportunity Wishlist** — Dynamic JSON-schema form engine, deadline countdowns, student opportunity watchlist, and automated reminder scheduling.
+- **Module 8: Notifications, Audit Logs & Universal Search** — Real-time in-app notification center, user preferences, immutable admin audit trail, and universal campus search.
+- **UI/UX Redesign & Global Theme Engine** — Official brand integration with `logo.jpeg`, zero-reload instant Light/Dark mode with `localStorage` persistence, responsive mobile drawer, and zero horizontal scroll.
 
-For detailed documentation, refer to the [UniVerse Platform Guide](./UniVerse/README.md) and [Implementation Status](./UniVerse/IMPLEMENTATION_STATUS.md).
+For detailed documentation, refer to the [UniVerse Platform Guide](./UniVerse/README.md), [Project Documentation](./UniVerse/PROJECT_DOCUMENTATION.md), and [Implementation Status](./UniVerse/IMPLEMENTATION_STATUS.md).

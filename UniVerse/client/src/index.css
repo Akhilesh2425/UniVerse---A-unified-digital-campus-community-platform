@@ -3,26 +3,62 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-light: #F5F7FC;
+    --surface-light: #FFFFFF;
+    --border-light: #E2E8F0;
+    --text-main: #172033;
+    --text-muted: #64748B;
+  }
+
+  .dark {
+    --bg-dark: #0F172A;
+    --surface-dark: #172033;
+    --surface-elevated: #1E293B;
+    --border-dark: #334155;
+    --text-dark-primary: #F1F5F9;
+    --text-dark-secondary: #A8B4C7;
+  }
+
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  #root {
+    width: 100%;
+    max-width: 100%;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-800 font-sans min-h-screen selection:bg-indigo-100 selection:text-indigo-900;
+    @apply bg-[#F5F7FC] text-[#172033] dark:bg-[#0F172A] dark:text-[#F1F5F9] antialiased min-h-screen font-sans;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
-/* Custom scrollbars for clean campus look */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.6);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(100, 116, 139, 0.6);
 }
+

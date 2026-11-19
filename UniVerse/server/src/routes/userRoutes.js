@@ -4,7 +4,7 @@ import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.use(authenticate); // All user profile routes require authentication
+router.use(authenticate); 
 
 router.get('/me', getProfile);
 router.patch('/me', updateProfile);

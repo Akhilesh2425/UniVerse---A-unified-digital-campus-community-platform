@@ -8,25 +8,16 @@ const getJwtSecret = () => {
   return secret;
 };
 
-/**
- * Generate a signed JWT token
- */
 export const signToken = (payload) => {
   return jwt.sign(payload, getJwtSecret(), {
     expiresIn: '7d',
   });
 };
 
-/**
- * Verify a JWT token
- */
 export const verifyToken = (token) => {
   return jwt.verify(token, getJwtSecret());
 };
 
-/**
- * Attach HTTP-only cookie and return standard JSON response
- */
 export const sendTokenResponse = (res, statusCode, user, message = 'Success') => {
   const token = signToken({
     id: user._id,
@@ -36,7 +27,7 @@ export const sendTokenResponse = (res, statusCode, user, message = 'Success') =>
   const isProduction = process.env.NODE_ENV === 'production';
 
   const cookieOptions = {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? 'none' : 'lax',
@@ -48,7 +39,7 @@ export const sendTokenResponse = (res, statusCode, user, message = 'Success') =>
   return res.status(statusCode).json({
     success: true,
     message,
-    token, // Provided for Authorization header fallback
+    token, 
     user: {
       _id: user._id,
       name: user.name,
@@ -62,9 +53,6 @@ export const sendTokenResponse = (res, statusCode, user, message = 'Success') =>
   });
 };
 
-/**
- * Clear the authentication cookie
- */
 export const clearTokenCookie = (res) => {
   const isProduction = process.env.NODE_ENV === 'production';
   res.clearCookie('token', {

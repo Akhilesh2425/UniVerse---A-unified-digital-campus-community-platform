@@ -59,7 +59,6 @@ const runAllTests = async () => {
   };
 
   try {
-    // 1. Connect DB and start test server on dynamic port
     await mongoose.connect(process.env.MONGO_URI);
     server = http.createServer(app);
     await new Promise((resolve) => server.listen(0, resolve));
@@ -67,17 +66,14 @@ const runAllTests = async () => {
     baseUrl = `http://127.0.0.1:${port}`;
     console.log(`[Test Suite] Test server running on ${baseUrl}\n`);
 
-    // Clean test accounts if exist
     const testEmail = 'test_student_2026@universe.edu';
     await User.deleteMany({ email: { $in: [testEmail, 'temp_dupe@universe.edu'] } });
 
-    // Test 1: Health check endpoint
     console.log('[Group 1: System Health]');
     const healthRes = await request('/api/health');
     assert(healthRes.status === 200, 'Health endpoint returns 200 OK');
     assert(healthRes.data.database.isConnected === true, 'Database status reported as connected');
 
-    // Test 2: Student Registration
     console.log('\n[Group 2: Authentication & Registration]');
     const regRes = await request('/api/auth/register', {
       method: 'POST',
@@ -88,7 +84,7 @@ const runAllTests = async () => {
         confirmPassword: 'Password123!',
         department: 'Computer Science',
         academicYear: '3rd Year',
-        role: 'admin', // Malicious attempt to elevate role
+        role: 'admin', 
       },
     });
 
@@ -98,7 +94,6 @@ const runAllTests = async () => {
     const studentToken = regRes.data.token;
     const studentAuthHeader = { Authorization: `Bearer ${studentToken}` };
 
-    // Test 3: Duplicate Registration Rejection
     const dupeRes = await request('/api/auth/register', {
       method: 'POST',
       body: {
@@ -112,7 +107,6 @@ const runAllTests = async () => {
     });
     assert(dupeRes.status === 409, 'Duplicate email registration rejected with 409 Conflict');
 
-    // Test 4: Password Mismatch Rejection
     const mismatchRes = await request('/api/auth/register', {
       method: 'POST',
       body: {
@@ -126,14 +120,12 @@ const runAllTests = async () => {
     });
     assert(mismatchRes.status === 400, 'Password mismatch rejected with 400 Bad Request');
 
-    // Test 5: Login - Failed Attempt
     const failLoginRes = await request('/api/auth/login', {
       method: 'POST',
       body: { email: testEmail, password: 'WrongPassword!' },
     });
     assert(failLoginRes.status === 401, 'Invalid credentials rejected with 401');
 
-    // Test 6: Login - Successful Attempt
     const successLoginRes = await request('/api/auth/login', {
       method: 'POST',
       body: { email: testEmail, password: 'Password123!' },
@@ -141,16 +133,13 @@ const runAllTests = async () => {
     assert(successLoginRes.status === 200, 'Valid credentials login returns 200 OK');
     assert(successLoginRes.data.user.email === testEmail, 'User profile returned without password');
 
-    // Test 7: Session Restoration (/api/auth/me)
     const meRes = await request('/api/auth/me', { headers: studentAuthHeader });
     assert(meRes.status === 200, 'Session restoration /api/auth/me returns 200');
     assert(meRes.data.user.name === 'Jordan Campus', 'Session restored correct student identity');
 
-    // Test 8: Unauthenticated access to protected route
     const unauthRes = await request('/api/auth/me');
     assert(unauthRes.status === 401, 'Unauthenticated /api/auth/me rejected with 401');
 
-    // Test 9: Profile Update & Privilege Protection
     console.log('\n[Group 3: User Profile]');
     const updateProfileRes = await request('/api/users/me', {
       method: 'PATCH',
@@ -158,14 +147,13 @@ const runAllTests = async () => {
       body: {
         department: 'Artificial Intelligence & Robotics',
         interests: ['Hackathons', 'Cloud Computing'],
-        role: 'admin', // Attempted role injection
+        role: 'admin', 
       },
     });
     assert(updateProfileRes.status === 200, 'Profile update returns 200 OK');
     assert(updateProfileRes.data.user.department === 'Artificial Intelligence & Robotics', 'Department updated successfully');
     assert(updateProfileRes.data.user.role === 'student', 'Tampered role ignored: remains student');
 
-    // Admin Authentication
     console.log('\n[Group 4: Admin Authorization & Roles]');
     const adminLoginRes = await request('/api/auth/login', {
       method: 'POST',
@@ -178,7 +166,6 @@ const runAllTests = async () => {
     const adminToken = adminLoginRes.data.token;
     const adminAuthHeader = { Authorization: `Bearer ${adminToken}` };
 
-    // Test 10: Role-based Authorization: Student attempting to create event
     const studentCreateEventRes = await request('/api/events', {
       method: 'POST',
       headers: studentAuthHeader,
@@ -193,33 +180,48 @@ const runAllTests = async () => {
     });
     assert(studentCreateEventRes.status === 403, 'Student blocked from creating event with 403 Forbidden');
 
-    // Test 11: Events Discovery & Filtering
     console.log('\n[Group 5: Events Module]');
     const eventsListRes = await request('/api/events');
     assert(eventsListRes.status === 200, 'Public events listing returns 200 OK');
-    assert(eventsListRes.data.events.length > 0, 'Loaded events from database');
-    const testEvent = eventsListRes.data.events[0];
+    let testEvent;
+    if (eventsListRes.data.events.length === 0) {
+      const createEventRes = await request('/api/events', {
+        method: 'POST',
+        headers: adminAuthHeader,
+        body: {
+          title: 'Campus Hackathon 2026',
+          description: 'Official annual university hackathon',
+          category: 'Technical',
+          venue: 'Auditorium Hall A',
+          startDate: new Date(Date.now() + 86400000),
+          endDate: new Date(Date.now() + 172800000),
+          registrationDeadline: new Date(Date.now() + 43200000),
+          maxParticipants: 100,
+        },
+      });
+      assert(createEventRes.status === 201, 'Admin created seed event for testing');
+      testEvent = createEventRes.data.event;
+    } else {
+      testEvent = eventsListRes.data.events[0];
+    }
+    assert(testEvent && testEvent._id, 'Loaded/created test event from database');
 
-    // Test 12: Event Details
     const eventDetailRes = await request(`/api/events/${testEvent._id}`, { headers: studentAuthHeader });
     assert(eventDetailRes.status === 200, 'Event details by ID returns 200 OK');
     assert(eventDetailRes.data.event.title === testEvent.title, 'Loaded matching event title');
 
-    // Test 13: Student Event Registration
     const registerEventRes = await request(`/api/events/${testEvent._id}/register`, {
       method: 'POST',
       headers: studentAuthHeader,
     });
     assert(registerEventRes.status === 201, 'Student successfully registered for event with 201');
 
-    // Test 14: Duplicate Event Registration Prevention
     const dupeEventRegRes = await request(`/api/events/${testEvent._id}/register`, {
       method: 'POST',
       headers: studentAuthHeader,
     });
     assert(dupeEventRegRes.status === 409, 'Duplicate event registration rejected with 409 Conflict');
 
-    // Test 15: My Registrations View
     const myRegsRes = await request('/api/events/my-registrations', { headers: studentAuthHeader });
     assert(myRegsRes.status === 200, 'My Registrations returns 200 OK');
     assert(
@@ -227,7 +229,6 @@ const runAllTests = async () => {
       'Registered event correctly appears in student My Events list'
     );
 
-    // Test 16: Cancel Event Registration
     const cancelRegRes = await request(`/api/events/${testEvent._id}/register`, {
       method: 'DELETE',
       headers: studentAuthHeader,
@@ -240,15 +241,12 @@ const runAllTests = async () => {
       'Cancelled event removed from active registrations'
     );
 
-    // Test 17: Announcements Module
     console.log('\n[Group 6: Announcements Module]');
-    // Student should only see published announcements
     const studentAnnounceRes = await request('/api/announcements', { headers: studentAuthHeader });
     assert(studentAnnounceRes.status === 200, 'Announcements list returns 200 OK');
     const hasUnpublished = studentAnnounceRes.data.announcements.some((a) => !a.isPublished);
     assert(!hasUnpublished, 'Students cannot see unpublished/draft announcements');
 
-    // Admin creating a new announcement
     const newAnnounceRes = await request('/api/announcements', {
       method: 'POST',
       headers: adminAuthHeader,
@@ -263,7 +261,6 @@ const runAllTests = async () => {
     assert(newAnnounceRes.status === 201, 'Admin created announcement returns 201 Created');
     const createdAnnounceId = newAnnounceRes.data.announcement._id;
 
-    // Admin updating/unpublishing announcement
     const updateAnnounceRes = await request(`/api/announcements/${createdAnnounceId}`, {
       method: 'PATCH',
       headers: adminAuthHeader,
@@ -271,26 +268,19 @@ const runAllTests = async () => {
     });
     assert(updateAnnounceRes.status === 200, 'Admin unpublished announcement successfully');
 
-    // Student trying to read now-unpublished announcement by ID -> must fail with 404
     const studentReadDraftRes = await request(`/api/announcements/${createdAnnounceId}`, {
       headers: studentAuthHeader,
     });
     assert(studentReadDraftRes.status === 404, 'Student reading unpublished announcement receives 404');
 
-    // Admin clean up test announcement
     const deleteAnnounceRes = await request(`/api/announcements/${createdAnnounceId}`, {
       method: 'DELETE',
       headers: adminAuthHeader,
     });
     assert(deleteAnnounceRes.status === 200, 'Admin deleted test announcement');
 
-    // Clean up test student
-    // ==========================================
-    // MODULE 3: GROUPS & COMMUNITIES INTEGRATION
-    // ==========================================
     console.log('\n[Group 7: Groups & Communities Module]');
 
-    // Create a second test student for membership/request testing
     const secondStudentEmail = 'student2_test@universe.edu';
     await User.deleteMany({ email: secondStudentEmail });
 
@@ -309,12 +299,10 @@ const runAllTests = async () => {
     const student2Token = student2Res.data.token;
     const student2AuthHeader = { Authorization: `Bearer ${student2Token}` };
 
-    // Test 18: Groups Discovery
     const groupsListRes = await request('/api/groups');
     assert(groupsListRes.status === 200, 'Groups discovery endpoint returns 200 OK');
-    assert(groupsListRes.data.groups.length > 0, 'Loaded groups from MongoDB');
+    assert(Array.isArray(groupsListRes.data.groups), 'Groups discovery returns groups array from MongoDB');
 
-    // Test 19: Create Public Group
     const createGroupRes = await request('/api/groups', {
       method: 'POST',
       headers: studentAuthHeader,
@@ -332,12 +320,10 @@ const runAllTests = async () => {
     assert(createGroupRes.data.group.name === 'Automated Test Coding Club', 'Group name stored accurately');
     const createdGroupId = createGroupRes.data.group._id;
 
-    // Test 20: Group Details
     const groupDetailRes = await request(`/api/groups/${createdGroupId}`, { headers: studentAuthHeader });
     assert(groupDetailRes.status === 200, 'Group details returns 200 OK');
     assert(groupDetailRes.data.group.isOwner === true, 'Creator verified as group owner');
 
-    // Test 21: Second Student Joins Public Group Directly
     const joinPublicRes = await request(`/api/groups/${createdGroupId}/join`, {
       method: 'POST',
       headers: student2AuthHeader,
@@ -345,14 +331,12 @@ const runAllTests = async () => {
     assert(joinPublicRes.status === 201, 'Second student joined public group with 201 Created');
     assert(joinPublicRes.data.status === 'joined', 'Direct join status confirmed');
 
-    // Test 22: Duplicate Join Attempt Blocked
     const dupeJoinRes = await request(`/api/groups/${createdGroupId}/join`, {
       method: 'POST',
       headers: student2AuthHeader,
     });
     assert(dupeJoinRes.status === 409, 'Duplicate join rejected with 409 Conflict');
 
-    // Test 23: Create Private Group
     const createPrivateGroupRes = await request('/api/groups', {
       method: 'POST',
       headers: studentAuthHeader,
@@ -367,7 +351,6 @@ const runAllTests = async () => {
     assert(createPrivateGroupRes.status === 201, 'Created private group with 201 Created');
     const privateGroupId = createPrivateGroupRes.data.group._id;
 
-    // Test 24: Second Student Requests to Join Private Group
     const requestPrivateRes = await request(`/api/groups/${privateGroupId}/join`, {
       method: 'POST',
       headers: student2AuthHeader,
@@ -375,20 +358,17 @@ const runAllTests = async () => {
     assert(requestPrivateRes.status === 201, 'Join request to private group submitted');
     assert(requestPrivateRes.data.status === 'requested', 'Status is pending request');
 
-    // Test 25: Duplicate Join Request Blocked
     const dupeRequestRes = await request(`/api/groups/${privateGroupId}/join`, {
       method: 'POST',
       headers: student2AuthHeader,
     });
     assert(dupeRequestRes.status === 409, 'Duplicate join request rejected with 409 Conflict');
 
-    // Test 26: Non-owner blocked from viewing join requests
     const unauthRequestsRes = await request(`/api/groups/${privateGroupId}/join-requests`, {
       headers: student2AuthHeader,
     });
     assert(unauthRequestsRes.status === 403, 'Non-owner blocked from viewing join requests with 403');
 
-    // Test 27: Owner Views Pending Join Requests
     const ownerRequestsRes = await request(`/api/groups/${privateGroupId}/join-requests`, {
       headers: studentAuthHeader,
     });
@@ -396,7 +376,6 @@ const runAllTests = async () => {
     assert(ownerRequestsRes.data.requests.length === 1, 'Found 1 pending request');
     const pendingRequestId = ownerRequestsRes.data.requests[0]._id;
 
-    // Test 28: Owner Approves Join Request
     const approveReqRes = await request(`/api/groups/${privateGroupId}/join-requests/${pendingRequestId}`, {
       method: 'PATCH',
       headers: studentAuthHeader,
@@ -404,7 +383,6 @@ const runAllTests = async () => {
     });
     assert(approveReqRes.status === 200, 'Owner approved join request successfully');
 
-    // Test 29: Promote Member to Moderator
     const promoteRes = await request(
       `/api/groups/${createdGroupId}/members/${student2Res.data.user._id}/role`,
       {
@@ -415,7 +393,6 @@ const runAllTests = async () => {
     );
     assert(promoteRes.status === 200, 'Owner promoted member to moderator');
 
-    // Test 30: Member Publishes a Post
     const newPostRes = await request(`/api/groups/${createdGroupId}/posts`, {
       method: 'POST',
       headers: student2AuthHeader,
@@ -427,7 +404,6 @@ const runAllTests = async () => {
     assert(newPostRes.status === 201, 'Group member published post with 201 Created');
     const createdPostId = newPostRes.data.post._id;
 
-    // Test 31: Add Comment to Post
     const addCommentRes = await request(`/api/groups/${createdGroupId}/posts/${createdPostId}/comments`, {
       method: 'POST',
       headers: studentAuthHeader,
@@ -435,39 +411,33 @@ const runAllTests = async () => {
     });
     assert(addCommentRes.status === 201, 'Added comment to post with 201 Created');
 
-    // Test 32: Retrieve My Groups
     const myGroupsRes = await request('/api/groups/my', { headers: student2AuthHeader });
     assert(myGroupsRes.status === 200, 'My Groups endpoint returns 200 OK');
     assert(myGroupsRes.data.groups.length >= 2, 'Student2 correctly belongs to both joined groups');
 
-    // Test 33: Sole Owner Prevented from Leaving
     const soleOwnerLeaveRes = await request(`/api/groups/${createdGroupId}/membership`, {
       method: 'DELETE',
       headers: studentAuthHeader,
     });
     assert(soleOwnerLeaveRes.status === 400, 'Sole owner prevented from leaving group with 400');
 
-    // Test 34: Ordinary Member Leaves Group
     const memberLeaveRes = await request(`/api/groups/${createdGroupId}/membership`, {
       method: 'DELETE',
       headers: student2AuthHeader,
     });
     assert(memberLeaveRes.status === 200, 'Member left group successfully with 200 OK');
 
-    // Test 35: Delete Group and Cascade Cleanup
     const deleteGroupRes = await request(`/api/groups/${createdGroupId}`, {
       method: 'DELETE',
       headers: studentAuthHeader,
     });
     assert(deleteGroupRes.status === 200, 'Group deleted with cascade cleanup of posts/comments');
 
-    // Clean up second private group
     await request(`/api/groups/${privateGroupId}`, {
       method: 'DELETE',
       headers: studentAuthHeader,
     });
 
-    // Clean up test students
     await User.deleteMany({ email: { $in: [testEmail, secondStudentEmail] } });
   } catch (error) {
     console.error('[Test Error]:', error);

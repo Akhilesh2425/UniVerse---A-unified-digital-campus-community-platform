@@ -2,18 +2,13 @@ import { verifyToken } from '../utils/jwt.js';
 import { User } from '../models/User.js';
 import { ROLES } from '../utils/constants.js';
 
-/**
- * Authenticate incoming request via cookie or Authorization header
- */
 export const authenticate = async (req, res, next) => {
   try {
     let token = null;
 
-    // Check HTTP-only cookie first
     if (req.cookies && req.cookies.token) {
       token = req.cookies.token;
     }
-    // Fall back to Authorization: Bearer <token>
     else if (
       req.headers.authorization &&
       req.headers.authorization.startsWith('Bearer ')
@@ -28,7 +23,6 @@ export const authenticate = async (req, res, next) => {
       });
     }
 
-    // Verify token
     let decoded;
     try {
       decoded = verifyToken(token);
@@ -39,7 +33,6 @@ export const authenticate = async (req, res, next) => {
       });
     }
 
-    // Find user in database
     const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(401).json({
@@ -48,7 +41,13 @@ export const authenticate = async (req, res, next) => {
       });
     }
 
-    // Attach user to request
+    if (user.status && user.status !== 'active') {
+      return res.status(403).json({
+        success: false,
+        message: `Your account is currently ${user.status}. Reason: ${user.statusReason || 'Please contact campus administration.'}`,
+      });
+    }
+
     req.user = user;
     next();
   } catch (error) {
@@ -56,9 +55,6 @@ export const authenticate = async (req, res, next) => {
   }
 };
 
-/**
- * Optional authentication: extracts user if token exists, but doesn't block unauthenticated requests
- */
 export const optionalAuthenticate = async (req, res, next) => {
   try {
     let token = null;
@@ -91,11 +87,8 @@ export const optionalAuthenticate = async (req, res, next) => {
   }
 };
 
-/**
- * Require administrator privileges
- */
 export const requireAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== ROLES.ADMIN) {
+  if (!req.user || (req.user.role !== ROLES.ADMIN && req.user.role !== ROLES.MAIN_ADMIN)) {
     return res.status(403).json({
       success: false,
       message: 'Access denied: Administrator privileges required.',
@@ -103,3 +96,15 @@ export const requireAdmin = (req, res, next) => {
   }
   next();
 };
+
+export const requireMainAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== ROLES.MAIN_ADMIN) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied: Main College Administrator authority required.',
+    });
+  }
+  next();
+};
+
+export const protect = authenticate;

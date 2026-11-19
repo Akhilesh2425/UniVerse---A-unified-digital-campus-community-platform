@@ -18,6 +18,11 @@ const groupMembershipSchema = new mongoose.Schema(
       enum: Object.values(GROUP_ROLES),
       default: GROUP_ROLES.MEMBER,
     },
+    emailPreference: {
+      type: String,
+      enum: ['all', 'announcements_only', 'digest', 'muted'],
+      default: 'all',
+    },
     joinedAt: {
       type: Date,
       default: Date.now,
@@ -34,7 +39,6 @@ const groupMembershipSchema = new mongoose.Schema(
   }
 );
 
-// Compound unique index preventing duplicate memberships for a user in a group
 groupMembershipSchema.index({ group: 1, user: 1 }, { unique: true });
 groupMembershipSchema.index({ user: 1, role: 1 });
 groupMembershipSchema.index({ group: 1, role: 1 });

@@ -1,7 +1,6 @@
 import api from './axios';
 
 export const discussionApi = {
-  // Discovery & Feed
   getDiscussions: async (params = {}) => {
     const res = await api.get('/discussions', { params });
     return res.data;
@@ -37,7 +36,6 @@ export const discussionApi = {
     return res.data;
   },
 
-  // Comments & Answers
   getComments: async (postId) => {
     const res = await api.get(`/discussions/${postId}/comments`);
     return res.data;
@@ -63,7 +61,6 @@ export const discussionApi = {
     return res.data;
   },
 
-  // Upvotes
   upvoteDiscussion: async (postId) => {
     const res = await api.post(`/discussions/${postId}/vote`);
     return res.data;
@@ -74,7 +71,6 @@ export const discussionApi = {
     return res.data;
   },
 
-  // Saved / Bookmarks
   saveDiscussion: async (postId) => {
     const res = await api.post(`/discussions/${postId}/save`);
     return res.data;
@@ -85,7 +81,6 @@ export const discussionApi = {
     return res.data;
   },
 
-  // Reports
   reportContent: async (postId, data, commentId = null) => {
     const url = commentId
       ? `/discussions/${postId}/comments/${commentId}/report`
@@ -94,7 +89,6 @@ export const discussionApi = {
     return res.data;
   },
 
-  // Moderation (Admin / Moderator)
   getModerationReports: async (params = {}) => {
     const res = await api.get('/moderation/reports', { params });
     return res.data;

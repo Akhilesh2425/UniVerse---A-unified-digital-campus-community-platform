@@ -106,12 +106,10 @@ const discussionPostSchema = new mongoose.Schema(
   }
 );
 
-// Virtual helper for question resolved status
 discussionPostSchema.virtual('isResolved').get(function () {
   return this.status === DISCUSSION_STATUS.RESOLVED || !!this.acceptedAnswer;
 });
 
-// Compound indexes for optimized query performance
 discussionPostSchema.index({ createdAt: -1 });
 discussionPostSchema.index({ category: 1, createdAt: -1 });
 discussionPostSchema.index({ type: 1, createdAt: -1 });
@@ -120,7 +118,6 @@ discussionPostSchema.index({ status: 1, createdAt: -1 });
 discussionPostSchema.index({ author: 1, createdAt: -1 });
 discussionPostSchema.index({ tags: 1 });
 
-// Full-text search index across title, content, and tags
 discussionPostSchema.index(
   { title: 'text', content: 'text', tags: 'text' },
   { weights: { title: 5, tags: 3, content: 1 }, name: 'DiscussionTextIndex' }

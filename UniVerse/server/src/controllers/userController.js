@@ -1,9 +1,5 @@
 import { User } from '../models/User.js';
 
-/**
- * Get current user profile
- * GET /api/users/me
- */
 export const getProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
@@ -23,10 +19,6 @@ export const getProfile = async (req, res, next) => {
   }
 };
 
-/**
- * Update current user profile
- * PATCH /api/users/me
- */
 export const updateProfile = async (req, res, next) => {
   try {
     const { name, department, academicYear, interests, avatarUrl } = req.body;
@@ -78,7 +70,6 @@ export const updateProfile = async (req, res, next) => {
       updates.avatarUrl = avatarUrl.trim();
     }
 
-    // Save updates
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       { $set: updates },

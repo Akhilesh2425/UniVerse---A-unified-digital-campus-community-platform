@@ -1,7 +1,6 @@
 import api from './axios';
 
 export const groupApi = {
-  // Discovery & Details
   getGroups: async (params = {}) => {
     const res = await api.get('/groups', { params });
     return res.data;
@@ -27,7 +26,6 @@ export const groupApi = {
     return res.data;
   },
 
-  // Membership & Requests
   joinGroup: async (id) => {
     const res = await api.post(`/groups/${id}/join`);
     return res.data;
@@ -68,7 +66,6 @@ export const groupApi = {
     return res.data;
   },
 
-  // Posts / Discussions
   getGroupPosts: async (id) => {
     const res = await api.get(`/groups/${id}/posts`);
     return res.data;
@@ -89,7 +86,6 @@ export const groupApi = {
     return res.data;
   },
 
-  // Comments
   getPostComments: async (id, postId) => {
     const res = await api.get(`/groups/${id}/posts/${postId}/comments`);
     return res.data;
@@ -107,6 +103,76 @@ export const groupApi = {
 
   deletePostComment: async (id, postId, commentId) => {
     const res = await api.delete(`/groups/${id}/posts/${postId}/comments/${commentId}`);
+    return res.data;
+  },
+
+  getGroupInvitations: async (id) => {
+    const res = await api.get(`/groups/${id}/invitations`);
+    return res.data;
+  },
+
+  generateGroupInvitation: async (id, data = {}) => {
+    const res = await api.post(`/groups/${id}/invitations`, data);
+    return res.data;
+  },
+
+  revokeGroupInvitation: async (id, inviteId) => {
+    const res = await api.delete(`/groups/${id}/invitations/${inviteId}`);
+    return res.data;
+  },
+
+  inspectQrInvitation: async (token) => {
+    const res = await api.get(`/groups/join/qr/${token}`);
+    return res.data;
+  },
+
+  joinViaQrInvitation: async (token) => {
+    const res = await api.post(`/groups/join/qr/${token}`);
+    return res.data;
+  },
+
+  getGroupResources: async (id) => {
+    const res = await api.get(`/groups/${id}/resources`);
+    return res.data;
+  },
+
+  createGroupResource: async (id, data) => {
+    const res = await api.post(`/groups/${id}/resources`, data);
+    return res.data;
+  },
+
+  deleteGroupResource: async (id, resourceId) => {
+    const res = await api.delete(`/groups/${id}/resources/${resourceId}`);
+    return res.data;
+  },
+
+  getGroupActivities: async (id) => {
+    const res = await api.get(`/groups/${id}/activities`);
+    return res.data;
+  },
+
+  createGroupActivity: async (id, data) => {
+    const res = await api.post(`/groups/${id}/activities`, data);
+    return res.data;
+  },
+
+  updateGroupActivity: async (id, activityId, data) => {
+    const res = await api.patch(`/groups/${id}/activities/${activityId}`, data);
+    return res.data;
+  },
+
+  deleteGroupActivity: async (id, activityId) => {
+    const res = await api.delete(`/groups/${id}/activities/${activityId}`);
+    return res.data;
+  },
+
+  transferGroupOwnership: async (id, newOwnerId) => {
+    const res = await api.patch(`/groups/${id}/ownership`, { newOwnerId });
+    return res.data;
+  },
+
+  updateGroupEmailPreference: async (id, emailPreference) => {
+    const res = await api.patch(`/groups/${id}/email-preference`, { emailPreference });
     return res.data;
   },
 };

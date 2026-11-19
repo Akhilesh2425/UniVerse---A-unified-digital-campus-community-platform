@@ -55,7 +55,6 @@ const announcementSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for student feed and category queries
 announcementSchema.index({ isPublished: 1, publishedAt: -1 });
 announcementSchema.index({ category: 1 });
 announcementSchema.index({ title: 'text', content: 'text' });

@@ -23,7 +23,6 @@ const seedDiscussions = async () => {
     await connectDB();
     console.log('[Seed Discussions] Connected to MongoDB Atlas.');
 
-    // Find users to author discussions and comments
     const users = await User.find({}).limit(5);
     if (!users || users.length === 0) {
       console.error('No users found in database. Run seedDemo.js or register a user first.');
@@ -34,7 +33,6 @@ const seedDiscussions = async () => {
     const u2 = users[1] || users[0];
     const u3 = users[2] || users[0];
 
-    // Check if discussions already exist
     const existingCount = await DiscussionPost.countDocuments();
     if (existingCount > 0) {
       console.log(`[Seed Discussions] Found ${existingCount} existing discussions. Skipping seeding to prevent duplicates.`);
@@ -43,7 +41,6 @@ const seedDiscussions = async () => {
 
     console.log('[Seed Discussions] Seeding initial discussions, questions, and resources...');
 
-    // 1. Question: Technical / DSA (with accepted answer)
     const q1 = await DiscussionPost.create({
       author: u1._id,
       title: 'How should a 3rd-year CS student approach Dynamic Programming for campus placement interviews?',
@@ -84,7 +81,6 @@ Recommended problem set: Striver's DP Series and NeetCode 150 DP category.`,
     q1.acceptedAnswer = c1._id;
     await q1.save();
 
-    // 2. Resource Post: AI & Research
     const r1 = await DiscussionPost.create({
       author: u2._id,
       title: 'Curated Open-Source LLM and Transformer Architecture Learning Roadmap (2026 Edition)',
@@ -115,7 +111,6 @@ Feel free to bookmark this post and share questions below!`,
       content: `Incredible compilation! Are you planning to organize a weekly study group or paper-reading session at the campus innovation lab?`,
     });
 
-    // 3. Project Collaboration Post
     const p1 = await DiscussionPost.create({
       author: u3._id,
       title: 'Seeking 2 Full-Stack & UI/UX Teammates for Smart Campus Parking & EV Charging IoT Project',
@@ -144,7 +139,6 @@ We plan to submit this to the upcoming University Tech Expo and compete for depa
       content: `I would love to contribute to the frontend dashboard! I have experience with Vite, React, and WebSocket integration. Sent you a DM on campus Slack.`,
     });
 
-    // 4. General Discussion Post
     await DiscussionPost.create({
       author: u1._id,
       title: 'Tips for balancing academic coursework, club leadership, and personal projects without burning out',
@@ -161,7 +155,6 @@ What daily routines, time-blocking methods, or habit-tracking workflows have gen
       status: DISCUSSION_STATUS.OPEN,
     });
 
-    // 5. Unanswered Question: Placements & Internships
     await DiscussionPost.create({
       author: u2._id,
       title: 'Off-campus vs On-campus internship applications: How early should we start reaching out to alumni on LinkedIn?',
@@ -176,7 +169,6 @@ What daily routines, time-blocking methods, or habit-tracking workflows have gen
       status: DISCUSSION_STATUS.OPEN,
     });
 
-    // Add sample votes and bookmarks
     await DiscussionVote.create({ post: q1._id, user: u2._id });
     await DiscussionVote.create({ post: r1._id, user: u1._id });
     await SavedDiscussion.create({ post: r1._id, user: u1._id });

@@ -10,15 +10,12 @@ import {
   DISCUSSION_STATUS,
   REPORT_REASONS,
   ROLES,
+  NOTIFICATION_TYPES,
 } from '../utils/constants.js';
+import { createNotification } from '../services/notificationService.js';
 
-// Safe author projection to prevent sensitive leakage
 const AUTHOR_FIELDS = 'name department academicYear avatarUrl role email';
 
-/**
- * GET /api/discussions
- * Discovery feed with search, category/type filters, unanswered questions, sorting & pagination
- */
 export const getDiscussions = async (req, res, next) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -31,25 +28,21 @@ export const getDiscussions = async (req, res, next) => {
       status: { $ne: DISCUSSION_STATUS.HIDDEN },
     };
 
-    // Category filter
     if (category && category !== 'All') {
       if (DISCUSSION_CATEGORIES.includes(category)) {
         query.category = category;
       }
     }
 
-    // Post type filter
     if (type && Object.values(DISCUSSION_TYPES).includes(type)) {
       query.type = type;
     }
 
-    // Unanswered filter (questions with 0 comments)
     if (unanswered === 'true') {
       query.type = DISCUSSION_TYPES.QUESTION;
       query.commentCount = 0;
     }
 
-    // Resolved filter for questions
     if (resolved === 'true') {
       query.type = DISCUSSION_TYPES.QUESTION;
       query.status = DISCUSSION_STATUS.RESOLVED;
@@ -58,12 +51,10 @@ export const getDiscussions = async (req, res, next) => {
       query.status = DISCUSSION_STATUS.OPEN;
     }
 
-    // Tag filter
     if (tag) {
       query.tags = tag.trim().toLowerCase();
     }
 
-    // Keyword Search
     if (search && search.trim()) {
       const keyword = search.trim();
       query.$or = [
@@ -73,11 +64,9 @@ export const getDiscussions = async (req, res, next) => {
       ];
     }
 
-    // Sorting strategy
-    let sortOption = { createdAt: -1 }; // default newest
+    let sortOption = { createdAt: -1 }; 
 
     if (sort === 'trending') {
-      // Trending: high upvotes and comments with recency
       sortOption = { upvoteCount: -1, commentCount: -1, createdAt: -1 };
     } else if (sort === 'top' || sort === 'most_upvoted') {
       sortOption = { upvoteCount: -1, createdAt: -1 };
@@ -102,7 +91,6 @@ export const getDiscussions = async (req, res, next) => {
         .lean(),
     ]);
 
-    // Check interaction states (upvoted & saved) for logged-in user
     let userVotedPostIds = new Set();
     let userSavedPostIds = new Set();
 
@@ -141,10 +129,6 @@ export const getDiscussions = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/discussions/:postId
- * Full discussion detail with author, tags, interaction stats, and permissions
- */
 export const getDiscussionById = async (req, res, next) => {
   try {
     const { postId } = req.params;
@@ -174,7 +158,6 @@ export const getDiscussionById = async (req, res, next) => {
       });
     }
 
-    // If hidden, only author or admin can view
     const isAuthor = req.user && req.user._id.equals(post.author._id);
     const isAdmin = req.user && req.user.role === ROLES.ADMIN;
 
@@ -185,7 +168,6 @@ export const getDiscussionById = async (req, res, next) => {
       });
     }
 
-    // Determine user interaction states
     let hasUpvoted = false;
     let hasSaved = false;
 
@@ -216,10 +198,6 @@ export const getDiscussionById = async (req, res, next) => {
   }
 };
 
-/**
- * POST /api/discussions
- * Create a new discussion post (Question, Discussion, Resource, Project)
- */
 export const createDiscussion = async (req, res, next) => {
   try {
     const { title, content, type, category, tags, resourceUrl, imageUrl } = req.body;
@@ -256,7 +234,6 @@ export const createDiscussion = async (req, res, next) => {
       ? type
       : DISCUSSION_TYPES.DISCUSSION;
 
-    // Validate resourceUrl if provided
     if (resourceUrl && resourceUrl.trim()) {
       try {
         new URL(resourceUrl.trim());
@@ -268,7 +245,6 @@ export const createDiscussion = async (req, res, next) => {
       }
     }
 
-    // Process tags
     let formattedTags = [];
     if (Array.isArray(tags)) {
       formattedTags = tags.map((t) => String(t).trim().toLowerCase()).filter(Boolean).slice(0, 8);
@@ -314,10 +290,6 @@ export const createDiscussion = async (req, res, next) => {
   }
 };
 
-/**
- * PATCH /api/discussions/:postId
- * Edit an authorized discussion post
- */
 export const updateDiscussion = async (req, res, next) => {
   try {
     const { postId } = req.params;
@@ -444,10 +416,6 @@ export const updateDiscussion = async (req, res, next) => {
   }
 };
 
-/**
- * DELETE /api/discussions/:postId
- * Delete discussion with cascading cleanup of comments, votes, bookmarks, and reports
- */
 export const deleteDiscussion = async (req, res, next) => {
   try {
     const { postId } = req.params;
@@ -477,7 +445,6 @@ export const deleteDiscussion = async (req, res, next) => {
       });
     }
 
-    // Cascade delete associated records
     await Promise.all([
       DiscussionComment.deleteMany({ post: postId }),
       DiscussionVote.deleteMany({ post: postId }),
@@ -495,10 +462,6 @@ export const deleteDiscussion = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/discussions/my-posts
- * Current authenticated user's discussion posts
- */
 export const getMyDiscussions = async (req, res, next) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -545,10 +508,6 @@ export const getMyDiscussions = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/discussions/:postId/comments
- * Fetch comments / answers with accepted answer prioritized
- */
 export const getComments = async (req, res, next) => {
   try {
     const { postId } = req.params;
@@ -601,10 +560,6 @@ export const getComments = async (req, res, next) => {
   }
 };
 
-/**
- * POST /api/discussions/:postId/comments
- * Add a comment or answer to a discussion
- */
 export const createComment = async (req, res, next) => {
   try {
     const { postId } = req.params;
@@ -652,12 +607,24 @@ export const createComment = async (req, res, next) => {
       content: content.trim(),
     });
 
-    // Atomically increment comment count
     await DiscussionPost.findByIdAndUpdate(postId, { $inc: { commentCount: 1 } });
 
     const populated = await DiscussionComment.findById(newComment._id)
       .populate('author', AUTHOR_FIELDS)
       .lean();
+
+    if (post.author && post.author.toString() !== req.user._id.toString()) {
+      await createNotification({
+        recipient: post.author,
+        actor: req.user._id,
+        type: NOTIFICATION_TYPES.DISCUSSION_COMMENT,
+        title: 'New Discussion Reply',
+        message: `${req.user.name} replied to your discussion "${post.title}".`,
+        entityType: 'discussion',
+        entityId: post._id,
+        actionUrl: `/discussions/${post._id}`,
+      });
+    }
 
     return res.status(201).json({
       success: true,
@@ -676,10 +643,6 @@ export const createComment = async (req, res, next) => {
   }
 };
 
-/**
- * PATCH /api/discussions/:postId/comments/:commentId
- * Edit an authorized comment
- */
 export const updateComment = async (req, res, next) => {
   try {
     const { commentId } = req.params;
@@ -740,10 +703,6 @@ export const updateComment = async (req, res, next) => {
   }
 };
 
-/**
- * DELETE /api/discussions/:postId/comments/:commentId
- * Delete an authorized comment and decrement comment count
- */
 export const deleteComment = async (req, res, next) => {
   try {
     const { postId, commentId } = req.params;
@@ -773,7 +732,6 @@ export const deleteComment = async (req, res, next) => {
       });
     }
 
-    // Check if this was accepted answer
     const post = await DiscussionPost.findById(postId);
     if (post && post.acceptedAnswer && post.acceptedAnswer.equals(commentId)) {
       post.acceptedAnswer = null;
@@ -796,14 +754,10 @@ export const deleteComment = async (req, res, next) => {
   }
 };
 
-/**
- * PATCH /api/discussions/:postId/accepted-answer
- * Mark or unmark an answer as accepted for a Question post
- */
 export const setAcceptedAnswer = async (req, res, next) => {
   try {
     const { postId } = req.params;
-    const { commentId } = req.body; // commentId can be null to unmark
+    const { commentId } = req.body; 
 
     if (!mongoose.Types.ObjectId.isValid(postId)) {
       return res.status(400).json({
@@ -837,7 +791,6 @@ export const setAcceptedAnswer = async (req, res, next) => {
       });
     }
 
-    // Unmark case: commentId is explicitly null or empty
     if (!commentId) {
       if (post.acceptedAnswer) {
         await DiscussionComment.findByIdAndUpdate(post.acceptedAnswer, { isAcceptedAnswer: false });
@@ -854,7 +807,6 @@ export const setAcceptedAnswer = async (req, res, next) => {
       });
     }
 
-    // Verify comment belongs to this post
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
       return res.status(400).json({
         success: false,
@@ -870,18 +822,29 @@ export const setAcceptedAnswer = async (req, res, next) => {
       });
     }
 
-    // Clear previous accepted answer if different
     if (post.acceptedAnswer && !post.acceptedAnswer.equals(commentId)) {
       await DiscussionComment.findByIdAndUpdate(post.acceptedAnswer, { isAcceptedAnswer: false });
     }
 
-    // Mark current comment as accepted
     comment.isAcceptedAnswer = true;
     await comment.save();
 
     post.acceptedAnswer = commentId;
     post.status = DISCUSSION_STATUS.RESOLVED;
     await post.save();
+
+    if (comment.author && !comment.author.equals(req.user._id)) {
+      await createNotification({
+        recipient: comment.author,
+        actor: req.user._id,
+        type: NOTIFICATION_TYPES.DISCUSSION_ACCEPTED_ANSWER,
+        title: 'Accepted Answer!',
+        message: `Your reply on "${post.title}" was marked as the accepted answer!`,
+        entityType: 'discussion',
+        entityId: post._id,
+        actionUrl: `/discussions/${post._id}`,
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -894,10 +857,6 @@ export const setAcceptedAnswer = async (req, res, next) => {
   }
 };
 
-/**
- * POST /api/discussions/:postId/vote
- * Upvote a discussion post with atomic duplicate prevention
- */
 export const voteDiscussion = async (req, res, next) => {
   try {
     const { postId } = req.params;
@@ -918,13 +877,11 @@ export const voteDiscussion = async (req, res, next) => {
     }
 
     try {
-      // Create vote record. Compound unique index enforces 1 vote per user/post
       await DiscussionVote.create({
         post: postId,
         user: req.user._id,
       });
 
-      // Atomically increment upvote count
       const updatedPost = await DiscussionPost.findByIdAndUpdate(
         postId,
         { $inc: { upvoteCount: 1 } },
@@ -939,7 +896,6 @@ export const voteDiscussion = async (req, res, next) => {
       });
     } catch (err) {
       if (err.code === 11000) {
-        // Duplicate key: User has already voted
         return res.status(200).json({
           success: true,
           message: 'You have already upvoted this post',
@@ -954,10 +910,6 @@ export const voteDiscussion = async (req, res, next) => {
   }
 };
 
-/**
- * DELETE /api/discussions/:postId/vote
- * Remove upvote from a discussion post
- */
 export const removeVoteDiscussion = async (req, res, next) => {
   try {
     const { postId } = req.params;
@@ -975,7 +927,6 @@ export const removeVoteDiscussion = async (req, res, next) => {
     });
 
     if (deletedVote) {
-      // Atomically decrement upvote count safely (min 0)
       const updatedPost = await DiscussionPost.findOneAndUpdate(
         { _id: postId, upvoteCount: { $gt: 0 } },
         { $inc: { upvoteCount: -1 } },
@@ -1005,10 +956,6 @@ export const removeVoteDiscussion = async (req, res, next) => {
   }
 };
 
-/**
- * POST /api/discussions/:postId/save
- * Save/bookmark a discussion post
- */
 export const saveDiscussion = async (req, res, next) => {
   try {
     const { postId } = req.params;
@@ -1056,10 +1003,6 @@ export const saveDiscussion = async (req, res, next) => {
   }
 };
 
-/**
- * DELETE /api/discussions/:postId/save
- * Remove saved/bookmarked discussion
- */
 export const unsaveDiscussion = async (req, res, next) => {
   try {
     const { postId } = req.params;
@@ -1093,10 +1036,6 @@ export const unsaveDiscussion = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/discussions/user/saved
- * Retrieve current user's saved discussions
- */
 export const getSavedDiscussions = async (req, res, next) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -1116,7 +1055,6 @@ export const getSavedDiscussions = async (req, res, next) => {
         .lean(),
     ]);
 
-    // Filter out any orphaned saves where the post was deleted or hidden
     const validDiscussions = savedDocs
       .filter((s) => s.post && s.post.status !== DISCUSSION_STATUS.HIDDEN)
       .map((s) => ({
@@ -1140,10 +1078,6 @@ export const getSavedDiscussions = async (req, res, next) => {
   }
 };
 
-/**
- * POST /api/discussions/:postId/report
- * Report a discussion post or comment for moderation review
- */
 export const reportContent = async (req, res, next) => {
   try {
     const { postId, commentId } = req.params;
@@ -1166,7 +1100,6 @@ export const reportContent = async (req, res, next) => {
       });
     }
 
-    // Verify target item exists
     if (targetType === 'post') {
       const post = await DiscussionPost.findById(targetId);
       if (!post) {

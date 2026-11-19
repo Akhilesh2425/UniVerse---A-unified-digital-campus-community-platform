@@ -8,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Check and restore session on application mount
   const checkAuth = async () => {
     try {
       setLoading(true);
@@ -82,7 +81,8 @@ export const AuthProvider = ({ children }) => {
         loading,
         error,
         isAuthenticated: !!user,
-        isAdmin: user?.role === 'admin',
+        isAdmin: user?.role === 'admin' || user?.role === 'main_admin',
+        isMainAdmin: user?.role === 'main_admin',
         login,
         register,
         logout,

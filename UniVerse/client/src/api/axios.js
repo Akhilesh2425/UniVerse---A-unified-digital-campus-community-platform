@@ -1,14 +1,13 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
-  withCredentials: true, // Enables sending and receiving HTTP-only cookies
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
+  withCredentials: true, 
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Attach Authorization header if a token is stored in localStorage
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('universe_token');
@@ -20,7 +19,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Intercept responses for consistent error formatting
 api.interceptors.response.use(
   (response) => response,
   (error) => {

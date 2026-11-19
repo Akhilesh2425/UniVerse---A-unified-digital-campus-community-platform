@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { ROLES } from '../utils/constants.js';
+import { ROLES, USER_STATUS } from '../utils/constants.js';
 
 const userSchema = new mongoose.Schema(
   {
@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
-      select: false, // Do not expose password hash in queries by default
+      select: false, 
     },
     role: {
       type: String,
@@ -52,6 +52,25 @@ const userSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    status: {
+      type: String,
+      enum: Object.values(USER_STATUS),
+      default: USER_STATUS.ACTIVE,
+    },
+    statusReason: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    statusUpdatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    lastLogin: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -65,7 +84,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Hash password before saving if modified
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
@@ -78,7 +96,6 @@ userSchema.pre('save', async function (next) {
   }
 });
 
-// Compare password helper
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };

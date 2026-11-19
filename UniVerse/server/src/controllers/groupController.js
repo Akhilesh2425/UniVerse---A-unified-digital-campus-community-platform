@@ -1,35 +1,36 @@
+import crypto from 'crypto';
 import mongoose from 'mongoose';
+import QRCode from 'qrcode';
 import { Group } from '../models/Group.js';
 import { GroupMembership } from '../models/GroupMembership.js';
 import { GroupJoinRequest } from '../models/GroupJoinRequest.js';
 import { GroupPost } from '../models/GroupPost.js';
 import { GroupComment } from '../models/GroupComment.js';
+import { GroupInvitation } from '../models/GroupInvitation.js';
+import { GroupResource } from '../models/GroupResource.js';
+import { GroupActivity } from '../models/GroupActivity.js';
 import {
   GROUP_CATEGORIES,
   GROUP_ROLES,
   GROUP_VISIBILITY,
   JOIN_REQUEST_STATUS,
   ROLES,
+  NOTIFICATION_TYPES,
 } from '../utils/constants.js';
+import { createNotification } from '../services/notificationService.js';
 
-// Helper: Check a user's membership and permissions in a group
 const getUserGroupRole = async (groupId, userId) => {
   if (!userId) return null;
   const membership = await GroupMembership.findOne({ group: groupId, user: userId });
   return membership ? membership.role : null;
 };
 
-/**
- * Get all groups with search, category filtering, and sorting
- * GET /api/groups
- */
 export const getGroups = async (req, res, next) => {
   try {
     const { search, category, sort = 'popular', visibility } = req.query;
 
     const query = {};
 
-    // Search filter
     if (search && search.trim()) {
       const searchRegex = new RegExp(search.trim(), 'i');
       query.$or = [
@@ -40,19 +41,16 @@ export const getGroups = async (req, res, next) => {
       ];
     }
 
-    // Category filter
     if (category && category !== 'All') {
       if (GROUP_CATEGORIES.includes(category)) {
         query.category = category;
       }
     }
 
-    // Visibility filter
     if (visibility && Object.values(GROUP_VISIBILITY).includes(visibility)) {
       query.visibility = visibility;
     }
 
-    // Sorting
     let sortOption = { memberCount: -1 };
     if (sort === 'newest') {
       sortOption = { createdAt: -1 };
@@ -65,7 +63,6 @@ export const getGroups = async (req, res, next) => {
       .sort(sortOption)
       .lean();
 
-    // If user is authenticated, determine their membership & request status for each group
     let userMembershipMap = new Map();
     let userPendingRequestSet = new Set();
 
@@ -110,10 +107,6 @@ export const getGroups = async (req, res, next) => {
   }
 };
 
-/**
- * Get single group details by ID
- * GET /api/groups/:id
- */
 export const getGroupById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -151,7 +144,6 @@ export const getGroupById = async (req, res, next) => {
     const isModerator = userRole === GROUP_ROLES.MODERATOR;
     const canManageGroup = isOwner || isModerator || isPlatformAdmin;
 
-    // Content access: public group can be viewed by anyone; private group content restricted to members and admins
     const canAccessDiscussions = group.visibility === GROUP_VISIBILITY.PUBLIC || isMember || isPlatformAdmin;
 
     return res.status(200).json({
@@ -172,10 +164,6 @@ export const getGroupById = async (req, res, next) => {
   }
 };
 
-/**
- * Create a new group (Authenticated student)
- * POST /api/groups
- */
 export const createGroup = async (req, res, next) => {
   try {
     const {
@@ -210,7 +198,6 @@ export const createGroup = async (req, res, next) => {
       });
     }
 
-    // Process tags
     let processedTags = [];
     if (Array.isArray(tags)) {
       processedTags = tags.map((t) => String(t).trim()).filter(Boolean);
@@ -218,7 +205,6 @@ export const createGroup = async (req, res, next) => {
       processedTags = tags.split(',').map((t) => t.trim()).filter(Boolean);
     }
 
-    // Process rules
     let processedRules = [];
     if (Array.isArray(rules)) {
       processedRules = rules.map((r) => String(r).trim()).filter(Boolean);
@@ -226,7 +212,6 @@ export const createGroup = async (req, res, next) => {
       processedRules = rules.split('\n').map((r) => r.trim()).filter(Boolean);
     }
 
-    // Create group with authenticated user as owner
     const newGroup = await Group.create({
       name: name.trim(),
       shortDescription: shortDescription.trim(),
@@ -237,11 +222,10 @@ export const createGroup = async (req, res, next) => {
       visibility,
       rules: processedRules,
       owner: req.user._id,
-      memberCount: 1, // Starts with owner as member
+      memberCount: 1, 
       postCount: 0,
     });
 
-    // Create initial owner membership
     await GroupMembership.create({
       group: newGroup._id,
       user: req.user._id,
@@ -261,10 +245,6 @@ export const createGroup = async (req, res, next) => {
   }
 };
 
-/**
- * Update group details (Owner or Moderator)
- * PATCH /api/groups/:id
- */
 export const updateGroup = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -278,7 +258,6 @@ export const updateGroup = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Group not found' });
     }
 
-    // Check permissions
     const userRole = await getUserGroupRole(id, req.user._id);
     const isPlatformAdmin = req.user.role === ROLES.ADMIN;
     if (userRole !== GROUP_ROLES.OWNER && userRole !== GROUP_ROLES.MODERATOR && !isPlatformAdmin) {
@@ -351,10 +330,6 @@ export const updateGroup = async (req, res, next) => {
   }
 };
 
-/**
- * Delete a group and cascade cleanup (Owner or Platform Admin)
- * DELETE /api/groups/:id
- */
 export const deleteGroup = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -377,7 +352,6 @@ export const deleteGroup = async (req, res, next) => {
       });
     }
 
-    // Cascade delete associated memberships, join requests, posts, and comments
     await Promise.all([
       GroupMembership.deleteMany({ group: id }),
       GroupJoinRequest.deleteMany({ group: id }),
@@ -395,10 +369,6 @@ export const deleteGroup = async (req, res, next) => {
   }
 };
 
-/**
- * Join a public group or request to join a private group
- * POST /api/groups/:id/join
- */
 export const joinGroup = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -412,7 +382,6 @@ export const joinGroup = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Group not found' });
     }
 
-    // Check existing membership
     const existingMembership = await GroupMembership.findOne({
       group: id,
       user: req.user._id,
@@ -426,7 +395,6 @@ export const joinGroup = async (req, res, next) => {
       });
     }
 
-    // Public group: join immediately
     if (group.visibility === GROUP_VISIBILITY.PUBLIC) {
       const membership = await GroupMembership.create({
         group: id,
@@ -441,7 +409,6 @@ export const joinGroup = async (req, res, next) => {
         { new: true }
       );
 
-      // Clean up any historical join request
       await GroupJoinRequest.deleteMany({ group: id, user: req.user._id });
 
       return res.status(201).json({
@@ -454,7 +421,6 @@ export const joinGroup = async (req, res, next) => {
       });
     }
 
-    // Private group: create or check join request
     const existingRequest = await GroupJoinRequest.findOne({
       group: id,
       user: req.user._id,
@@ -474,6 +440,19 @@ export const joinGroup = async (req, res, next) => {
       status: JOIN_REQUEST_STATUS.PENDING,
     });
 
+    if (group.owner && group.owner.toString() !== req.user._id.toString()) {
+      await createNotification({
+        recipient: group.owner,
+        actor: req.user._id,
+        type: NOTIFICATION_TYPES.GROUP_JOIN_REQUEST,
+        title: 'New Community Join Request',
+        message: `${req.user.name} requested to join "${group.name}".`,
+        entityType: 'group',
+        entityId: group._id,
+        actionUrl: `/groups/${group._id}`,
+      });
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Join request submitted! An administrator or moderator will review your request.',
@@ -485,10 +464,6 @@ export const joinGroup = async (req, res, next) => {
   }
 };
 
-/**
- * Leave a group (Authenticated member)
- * DELETE /api/groups/:id/membership
- */
 export const leaveGroup = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -505,7 +480,6 @@ export const leaveGroup = async (req, res, next) => {
       });
     }
 
-    // Owner protection rule: if user is the sole owner, prevent leaving without transfer/delete
     if (membership.role === GROUP_ROLES.OWNER) {
       const ownerCount = await GroupMembership.countDocuments({
         group: id,
@@ -537,10 +511,6 @@ export const leaveGroup = async (req, res, next) => {
   }
 };
 
-/**
- * Get all groups for the authenticated user (My Groups)
- * GET /api/groups/my
- */
 export const getMyGroups = async (req, res, next) => {
   try {
     const memberships = await GroupMembership.find({ user: req.user._id })
@@ -560,7 +530,6 @@ export const getMyGroups = async (req, res, next) => {
         group: m.group,
       }));
 
-    // Also get pending join requests submitted by this student
     const pendingRequests = await GroupJoinRequest.find({
       user: req.user._id,
       status: JOIN_REQUEST_STATUS.PENDING,
@@ -589,10 +558,6 @@ export const getMyGroups = async (req, res, next) => {
   }
 };
 
-/**
- * Get group members list
- * GET /api/groups/:id/members
- */
 export const getGroupMembers = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -606,7 +571,6 @@ export const getGroupMembers = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Group not found' });
     }
 
-    // Access check: for private group, requester must be member or platform admin
     if (group.visibility === GROUP_VISIBILITY.PRIVATE) {
       const userRole = await getUserGroupRole(id, req.user?._id);
       const isPlatformAdmin = req.user?.role === ROLES.ADMIN;
@@ -623,7 +587,6 @@ export const getGroupMembers = async (req, res, next) => {
       .sort({ joinedAt: 1 })
       .lean();
 
-    // Order: owner first, then moderators, then members
     const roleWeight = { owner: 1, moderator: 2, member: 3 };
     const sortedMembers = memberships
       .filter((m) => m.user !== null)
@@ -645,10 +608,6 @@ export const getGroupMembers = async (req, res, next) => {
   }
 };
 
-/**
- * Get pending join requests for a private group (Owner/Moderator only)
- * GET /api/groups/:id/join-requests
- */
 export const getJoinRequests = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -684,14 +643,10 @@ export const getJoinRequests = async (req, res, next) => {
   }
 };
 
-/**
- * Approve or reject a join request (Owner/Moderator only)
- * PATCH /api/groups/:id/join-requests/:requestId
- */
 export const reviewJoinRequest = async (req, res, next) => {
   try {
     const { id, requestId } = req.params;
-    const { status } = req.body; // 'approved' or 'rejected'
+    const { status } = req.body; 
 
     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(requestId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' });
@@ -731,7 +686,6 @@ export const reviewJoinRequest = async (req, res, next) => {
     await joinRequest.save();
 
     if (status === 'approved') {
-      // Check if user is already a member somehow
       const existing = await GroupMembership.findOne({ group: id, user: joinRequest.user });
       if (!existing) {
         await GroupMembership.create({
@@ -744,6 +698,18 @@ export const reviewJoinRequest = async (req, res, next) => {
       }
     }
 
+    const targetGroup = await Group.findById(id).select('name');
+    await createNotification({
+      recipient: joinRequest.user,
+      actor: req.user._id,
+      type: NOTIFICATION_TYPES.GROUP_JOIN_DECISION,
+      title: `Community Join Request ${status.toUpperCase()}`,
+      message: `Your request to join "${targetGroup ? targetGroup.name : 'the community'}" has been ${status}.`,
+      entityType: 'group',
+      entityId: id,
+      actionUrl: `/groups/${id}`,
+    });
+
     return res.status(200).json({
       success: true,
       message: `Join request ${status} successfully.`,
@@ -754,14 +720,10 @@ export const reviewJoinRequest = async (req, res, next) => {
   }
 };
 
-/**
- * Promote or demote a group member's role (Owner only)
- * PATCH /api/groups/:id/members/:userId/role
- */
 export const updateMemberRole = async (req, res, next) => {
   try {
     const { id, userId } = req.params;
-    const { role } = req.body; // 'moderator' or 'member'
+    const { role } = req.body; 
 
     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' });
@@ -808,10 +770,6 @@ export const updateMemberRole = async (req, res, next) => {
   }
 };
 
-/**
- * Remove an ordinary member from group (Owner or Moderator)
- * DELETE /api/groups/:id/members/:userId
- */
 export const removeMember = async (req, res, next) => {
   try {
     const { id, userId } = req.params;
@@ -835,7 +793,6 @@ export const removeMember = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Member not found in this group.' });
     }
 
-    // Owner cannot be removed
     if (targetMembership.role === GROUP_ROLES.OWNER) {
       return res.status(400).json({
         success: false,
@@ -843,7 +800,6 @@ export const removeMember = async (req, res, next) => {
       });
     }
 
-    // Moderators cannot remove other moderators or owners (only owners or platform admin can remove moderators)
     if (callerRole === GROUP_ROLES.MODERATOR && targetMembership.role === GROUP_ROLES.MODERATOR) {
       return res.status(403).json({
         success: false,
@@ -863,14 +819,6 @@ export const removeMember = async (req, res, next) => {
   }
 };
 
-// ==========================================
-// GROUP POSTS & DISCUSSIONS
-// ==========================================
-
-/**
- * Get posts for a group
- * GET /api/groups/:id/posts
- */
 export const getGroupPosts = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -884,7 +832,6 @@ export const getGroupPosts = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Group not found' });
     }
 
-    // If private group, only members or platform admin can view posts
     if (group.visibility === GROUP_VISIBILITY.PRIVATE) {
       const userRole = await getUserGroupRole(id, req.user?._id);
       const isPlatformAdmin = req.user?.role === ROLES.ADMIN;
@@ -911,10 +858,6 @@ export const getGroupPosts = async (req, res, next) => {
   }
 };
 
-/**
- * Create a new post in a group (Members only)
- * POST /api/groups/:id/posts
- */
 export const createGroupPost = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -933,7 +876,6 @@ export const createGroupPost = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Group not found.' });
     }
 
-    // Must be a member to publish posts in any group
     const userRole = await getUserGroupRole(id, req.user._id);
     const isPlatformAdmin = req.user.role === ROLES.ADMIN;
     if (!userRole && !isPlatformAdmin) {
@@ -969,10 +911,6 @@ export const createGroupPost = async (req, res, next) => {
   }
 };
 
-/**
- * Update a group post (Author only)
- * PATCH /api/groups/:id/posts/:postId
- */
 export const updateGroupPost = async (req, res, next) => {
   try {
     const { id, postId } = req.params;
@@ -1015,10 +953,6 @@ export const updateGroupPost = async (req, res, next) => {
   }
 };
 
-/**
- * Delete a group post (Author, Owner, Moderator, or Platform Admin)
- * DELETE /api/groups/:id/posts/:postId
- */
 export const deleteGroupPost = async (req, res, next) => {
   try {
     const { id, postId } = req.params;
@@ -1044,7 +978,6 @@ export const deleteGroupPost = async (req, res, next) => {
       });
     }
 
-    // Cascade delete comments for this post
     await GroupComment.deleteMany({ post: postId });
     await GroupPost.findByIdAndDelete(postId);
     await Group.findByIdAndUpdate(id, { $inc: { postCount: -1 } });
@@ -1058,14 +991,6 @@ export const deleteGroupPost = async (req, res, next) => {
   }
 };
 
-// ==========================================
-// COMMENTS ON GROUP POSTS
-// ==========================================
-
-/**
- * Get comments for a post
- * GET /api/groups/:id/posts/:postId/comments
- */
 export const getPostComments = async (req, res, next) => {
   try {
     const { id, postId } = req.params;
@@ -1105,10 +1030,6 @@ export const getPostComments = async (req, res, next) => {
   }
 };
 
-/**
- * Add a comment to a group post (Members only)
- * POST /api/groups/:id/posts/:postId/comments
- */
 export const createPostComment = async (req, res, next) => {
   try {
     const { id, postId } = req.params;
@@ -1127,7 +1048,6 @@ export const createPostComment = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Post not found.' });
     }
 
-    // Must be member to comment
     const userRole = await getUserGroupRole(id, req.user._id);
     const isPlatformAdmin = req.user.role === ROLES.ADMIN;
     if (!userRole && !isPlatformAdmin) {
@@ -1161,10 +1081,6 @@ export const createPostComment = async (req, res, next) => {
   }
 };
 
-/**
- * Update a comment (Author only)
- * PATCH /api/groups/:id/posts/:postId/comments/:commentId
- */
 export const updatePostComment = async (req, res, next) => {
   try {
     const { id, postId, commentId } = req.params;
@@ -1204,10 +1120,6 @@ export const updatePostComment = async (req, res, next) => {
   }
 };
 
-/**
- * Delete a comment (Author, Owner, Moderator, or Platform Admin)
- * DELETE /api/groups/:id/posts/:postId/comments/:commentId
- */
 export const deletePostComment = async (req, res, next) => {
   try {
     const { id, postId, commentId } = req.params;
@@ -1235,6 +1147,629 @@ export const deletePostComment = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: 'Comment deleted successfully.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const generateGroupInvitation = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { expiryDays = 7, maxUses = null } = req.body;
+
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ success: false, message: 'Group not found.' });
+    }
+
+    const userRole = await getUserGroupRole(id, req.user._id);
+    const canManage = userRole === GROUP_ROLES.OWNER || userRole === GROUP_ROLES.MODERATOR || req.user.role === ROLES.ADMIN || req.user.role === ROLES.MAIN_ADMIN;
+
+    if (!canManage) {
+      return res.status(403).json({
+        success: false,
+        message: 'Permission denied: Only group owners or moderators can create invitation links.',
+      });
+    }
+
+    const token = crypto.randomBytes(20).toString('hex');
+    const expiresAt = new Date(Date.now() + parseInt(expiryDays, 10) * 24 * 60 * 60 * 1000);
+
+    const invitation = await GroupInvitation.create({
+      group: id,
+      token,
+      createdBy: req.user._id,
+      expiresAt,
+      maxUses: maxUses ? parseInt(maxUses, 10) : null,
+    });
+
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const inviteUrl = `${clientUrl}/groups/join/qr/${token}`;
+
+    const qrCodeDataUrl = await QRCode.toDataURL(inviteUrl, {
+      width: 320,
+      margin: 2,
+      color: {
+        dark: '#0b1728',
+        light: '#ffffff',
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'QR Invitation generated successfully.',
+      qrCodeDataUrl,
+      inviteUrl,
+      invitation: {
+        id: invitation._id,
+        token: invitation.token,
+        inviteUrl,
+        qrCodeDataUrl,
+        expiresAt: invitation.expiresAt,
+        maxUses: invitation.maxUses,
+        useCount: invitation.useCount,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getGroupInvitations = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const invitation = await GroupInvitation.findOne({
+      group: id,
+      revokedAt: null,
+      expiresAt: { $gt: new Date() },
+    }).sort({ createdAt: -1 });
+
+    if (!invitation) {
+      return res.status(200).json({ success: true, invitation: null });
+    }
+
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const inviteUrl = `${clientUrl}/groups/join/qr/${invitation.token}`;
+    const qrCodeDataUrl = await QRCode.toDataURL(inviteUrl, {
+      width: 320,
+      margin: 2,
+      color: { dark: '#0b1728', light: '#ffffff' },
+    });
+
+    return res.status(200).json({
+      success: true,
+      invitation: {
+        id: invitation._id,
+        token: invitation.token,
+        inviteUrl,
+        qrCodeDataUrl,
+        expiresAt: invitation.expiresAt,
+        maxUses: invitation.maxUses,
+        useCount: invitation.useCount,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const revokeGroupInvitation = async (req, res, next) => {
+  try {
+    const { id, inviteId } = req.params;
+
+    const userRole = await getUserGroupRole(id, req.user._id);
+    const canManage = userRole === GROUP_ROLES.OWNER || userRole === GROUP_ROLES.MODERATOR || req.user.role === ROLES.ADMIN || req.user.role === ROLES.MAIN_ADMIN;
+
+    if (!canManage) {
+      return res.status(403).json({ success: false, message: 'Permission denied.' });
+    }
+
+    const invitation = await GroupInvitation.findOneAndUpdate(
+      { _id: inviteId, group: id },
+      { revokedAt: new Date() },
+      { new: true }
+    );
+
+    if (!invitation) {
+      return res.status(404).json({ success: false, message: 'Invitation not found.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Invitation successfully revoked.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const inspectQrInvitation = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+
+    const invitation = await GroupInvitation.findOne({ token }).populate('group');
+    if (!invitation || !invitation.isValid()) {
+      return res.status(404).json({
+        success: false,
+        message: 'This invitation link has expired, been revoked, or is invalid.',
+      });
+    }
+
+    const group = invitation.group;
+    let isMember = false;
+    let hasPendingRequest = false;
+
+    if (req.user) {
+      const existing = await GroupMembership.findOne({ group: group._id, user: req.user._id });
+      isMember = !!existing;
+
+      const pending = await GroupJoinRequest.findOne({
+        group: group._id,
+        user: req.user._id,
+        status: JOIN_REQUEST_STATUS.PENDING,
+      });
+      hasPendingRequest = !!pending;
+    }
+
+    return res.status(200).json({
+      success: true,
+      group: {
+        _id: group._id,
+        name: group.name,
+        shortDescription: group.shortDescription,
+        category: group.category,
+        visibility: group.visibility,
+        memberCount: group.memberCount,
+        coverImage: group.coverImage,
+      },
+      invitation: {
+        token: invitation.token,
+        expiresAt: invitation.expiresAt,
+      },
+      isMember,
+      hasPendingRequest,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const joinViaQrInvitation = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+
+    const invitation = await GroupInvitation.findOne({ token }).populate('group');
+    if (!invitation || !invitation.isValid()) {
+      return res.status(400).json({
+        success: false,
+        message: 'This invitation link is invalid, expired, or has reached its usage limit.',
+      });
+    }
+
+    const group = invitation.group;
+
+    const existing = await GroupMembership.findOne({ group: group._id, user: req.user._id });
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: 'You are already a member of this community.',
+      });
+    }
+
+    const isDirectJoin = group.visibility === GROUP_VISIBILITY.PUBLIC && !group.membershipApprovalRequired;
+
+    if (isDirectJoin) {
+      await GroupMembership.create({
+        group: group._id,
+        user: req.user._id,
+        role: GROUP_ROLES.MEMBER,
+      });
+
+      await Group.findByIdAndUpdate(group._id, { $inc: { memberCount: 1 } });
+      invitation.useCount += 1;
+      await invitation.save();
+
+      return res.status(201).json({
+        success: true,
+        joined: true,
+        message: `Welcome to ${group.name}! You are now an official member.`,
+        groupId: group._id,
+      });
+    } else {
+      const existingRequest = await GroupJoinRequest.findOne({
+        group: group._id,
+        user: req.user._id,
+        status: JOIN_REQUEST_STATUS.PENDING,
+      });
+
+      if (existingRequest) {
+        return res.status(409).json({
+          success: false,
+          message: 'You already have a pending membership request for this group.',
+        });
+      }
+
+      await GroupJoinRequest.create({
+        group: group._id,
+        user: req.user._id,
+        message: 'Joined via invitation QR code.',
+        status: JOIN_REQUEST_STATUS.PENDING,
+      });
+
+      invitation.useCount += 1;
+      await invitation.save();
+
+      await createNotification({
+        recipient: group.owner,
+        actor: req.user._id,
+        type: NOTIFICATION_TYPES.GROUP_JOIN_REQUEST,
+        title: 'New Member Request via QR Code',
+        message: `${req.user.name} scanned your QR code and requested to join "${group.name}".`,
+        entityType: 'group',
+        entityId: group._id,
+        actionUrl: `/groups/${group._id}`,
+      });
+
+      return res.status(200).json({
+        success: true,
+        joined: false,
+        pendingApproval: true,
+        message: 'Membership request submitted! The group owner has been notified.',
+        groupId: group._id,
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getGroupResources = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ success: false, message: 'Group not found.' });
+    }
+
+    if (group.visibility === GROUP_VISIBILITY.PRIVATE) {
+      const userRole = await getUserGroupRole(id, req.user?._id);
+      const isPlatformAdmin = req.user?.role === ROLES.ADMIN || req.user?.role === ROLES.MAIN_ADMIN;
+
+      if (!userRole && !isPlatformAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access restricted: Only verified community members can view resources of private groups.',
+        });
+      }
+    }
+
+    const resources = await GroupResource.find({ group: id })
+      .populate('uploadedBy', 'name email avatarUrl')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({ success: true, resources });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createGroupResource = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { title, description = '', fileUrl, fileType = 'document', fileSize = '' } = req.body;
+
+    if (!title || !fileUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Resource title and file URL/link are required.',
+      });
+    }
+
+    const userRole = await getUserGroupRole(id, req.user._id);
+    const isPlatformAdmin = req.user.role === ROLES.ADMIN || req.user.role === ROLES.MAIN_ADMIN;
+
+    if (!userRole && !isPlatformAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'You must be a member of this community to upload study resources.',
+      });
+    }
+
+    const resource = await GroupResource.create({
+      group: id,
+      title: title.trim(),
+      description: description.trim(),
+      fileUrl: fileUrl.trim(),
+      fileType,
+      fileSize,
+      uploadedBy: req.user._id,
+    });
+
+    await resource.populate('uploadedBy', 'name email avatarUrl');
+
+    return res.status(201).json({
+      success: true,
+      message: 'Study note / resource shared successfully.',
+      resource,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteGroupResource = async (req, res, next) => {
+  try {
+    const { id, resourceId } = req.params;
+
+    const resource = await GroupResource.findOne({ _id: resourceId, group: id });
+    if (!resource) {
+      return res.status(404).json({ success: false, message: 'Resource not found.' });
+    }
+
+    const userRole = await getUserGroupRole(id, req.user._id);
+    const isUploader = resource.uploadedBy.toString() === req.user._id.toString();
+    const canManage = userRole === GROUP_ROLES.OWNER || userRole === GROUP_ROLES.MODERATOR;
+    const isPlatformAdmin = req.user.role === ROLES.ADMIN || req.user.role === ROLES.MAIN_ADMIN;
+
+    if (!isUploader && !canManage && !isPlatformAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Permission denied: You are not authorized to delete this resource.',
+      });
+    }
+
+    await GroupResource.findByIdAndDelete(resourceId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Resource deleted successfully.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getGroupActivities = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ success: false, message: 'Group not found.' });
+    }
+
+    if (group.visibility === GROUP_VISIBILITY.PRIVATE) {
+      const userRole = await getUserGroupRole(id, req.user?._id);
+      const isPlatformAdmin = req.user?.role === ROLES.ADMIN || req.user?.role === ROLES.MAIN_ADMIN;
+
+      if (!userRole && !isPlatformAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access restricted: Only community members can view activities of private groups.',
+        });
+      }
+    }
+
+    const activities = await GroupActivity.find({ group: id })
+      .populate('createdBy', 'name email avatarUrl')
+      .sort({ startDate: 1 });
+
+    return res.status(200).json({ success: true, activities });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createGroupActivity = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      description = '',
+      startDate,
+      endDate,
+      location = 'Campus Location',
+      meetingLink = '',
+      isOnline = false,
+    } = req.body;
+
+    const effectiveStart = req.body.startDate || req.body.startTime;
+    const effectiveEnd =
+      req.body.endDate ||
+      req.body.endTime ||
+      (effectiveStart ? new Date(new Date(effectiveStart).getTime() + 60 * 60 * 1000) : null);
+
+    if (!title || !effectiveStart) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title and scheduled time are required.',
+      });
+    }
+
+    const userRole = await getUserGroupRole(id, req.user._id);
+    const canManage = userRole === GROUP_ROLES.OWNER || userRole === GROUP_ROLES.MODERATOR || req.user.role === ROLES.ADMIN || req.user.role === ROLES.MAIN_ADMIN;
+
+    if (!canManage) {
+      return res.status(403).json({
+        success: false,
+        message: 'Permission denied: Only group owners or moderators can schedule activities.',
+      });
+    }
+
+    const activity = await GroupActivity.create({
+      group: id,
+      title: title.trim(),
+      description: description.trim(),
+      startDate: new Date(effectiveStart),
+      endDate: new Date(effectiveEnd),
+      location: location.trim(),
+      meetingLink: meetingLink.trim(),
+      isOnline: Boolean(isOnline),
+      createdBy: req.user._id,
+    });
+
+    await activity.populate('createdBy', 'name email avatarUrl');
+
+    return res.status(201).json({
+      success: true,
+      message: 'Group activity scheduled successfully.',
+      activity,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateGroupActivity = async (req, res, next) => {
+  try {
+    const { id, activityId } = req.params;
+    const { title, description, startDate, endDate, location, meetingLink, isOnline, isCancelled } = req.body;
+
+    const activity = await GroupActivity.findOne({ _id: activityId, group: id });
+    if (!activity) {
+      return res.status(404).json({ success: false, message: 'Activity not found.' });
+    }
+
+    const userRole = await getUserGroupRole(id, req.user._id);
+    const canManage = userRole === GROUP_ROLES.OWNER || userRole === GROUP_ROLES.MODERATOR || req.user.role === ROLES.ADMIN || req.user.role === ROLES.MAIN_ADMIN;
+
+    if (!canManage) {
+      return res.status(403).json({ success: false, message: 'Permission denied.' });
+    }
+
+    if (title) activity.title = title.trim();
+    if (description !== undefined) activity.description = description.trim();
+    if (startDate) activity.startDate = new Date(startDate);
+    if (endDate) activity.endDate = new Date(endDate);
+    if (location !== undefined) activity.location = location.trim();
+    if (meetingLink !== undefined) activity.meetingLink = meetingLink.trim();
+    if (isOnline !== undefined) activity.isOnline = Boolean(isOnline);
+    if (isCancelled !== undefined) activity.isCancelled = Boolean(isCancelled);
+
+    await activity.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Activity updated successfully.',
+      activity,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteGroupActivity = async (req, res, next) => {
+  try {
+    const { id, activityId } = req.params;
+
+    const activity = await GroupActivity.findOne({ _id: activityId, group: id });
+    if (!activity) {
+      return res.status(404).json({ success: false, message: 'Activity not found.' });
+    }
+
+    const userRole = await getUserGroupRole(id, req.user._id);
+    const canManage = userRole === GROUP_ROLES.OWNER || userRole === GROUP_ROLES.MODERATOR || req.user.role === ROLES.ADMIN || req.user.role === ROLES.MAIN_ADMIN;
+
+    if (!canManage) {
+      return res.status(403).json({ success: false, message: 'Permission denied.' });
+    }
+
+    await GroupActivity.findByIdAndDelete(activityId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Activity deleted successfully.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const transferGroupOwnership = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { newOwnerId } = req.body;
+
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ success: false, message: 'Group not found.' });
+    }
+
+    if (group.owner.toString() !== req.user._id.toString() && req.user.role !== ROLES.ADMIN && req.user.role !== ROLES.MAIN_ADMIN) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only the current group owner can transfer ownership of this community.',
+      });
+    }
+
+    if (group.owner.toString() === newOwnerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Selected user is already the group owner.',
+      });
+    }
+
+    const newOwnerMembership = await GroupMembership.findOne({ group: id, user: newOwnerId });
+    if (!newOwnerMembership) {
+      return res.status(400).json({
+        success: false,
+        message: 'New owner must be an existing member of this community.',
+      });
+    }
+
+    const previousOwnerId = group.owner;
+    group.owner = newOwnerId;
+    await group.save();
+
+    newOwnerMembership.role = GROUP_ROLES.OWNER;
+    await newOwnerMembership.save();
+
+    await GroupMembership.findOneAndUpdate(
+      { group: id, user: previousOwnerId },
+      { role: GROUP_ROLES.MODERATOR }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Group ownership transferred successfully.',
+      group,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateGroupEmailPreference = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { emailPreference } = req.body;
+
+    if (!['all', 'announcements_only', 'digest', 'muted'].includes(emailPreference)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email preference. Must be all, announcements_only, digest, or muted.',
+      });
+    }
+
+    const membership = await GroupMembership.findOne({ group: id, user: req.user._id });
+    if (!membership) {
+      return res.status(404).json({
+        success: false,
+        message: 'You are not a member of this community.',
+      });
+    }
+
+    membership.emailPreference = emailPreference;
+    await membership.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Group email preference set to "${emailPreference}".`,
+      emailPreference,
+      membership,
     });
   } catch (error) {
     next(error);

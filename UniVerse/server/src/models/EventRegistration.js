@@ -34,7 +34,6 @@ const eventRegistrationSchema = new mongoose.Schema(
   }
 );
 
-// Compound unique index ensuring one registration record per user per event
 eventRegistrationSchema.index({ event: 1, user: 1 }, { unique: true });
 eventRegistrationSchema.index({ user: 1, status: 1 });
 

@@ -8,10 +8,6 @@ import { REPORT_STATUS, DISCUSSION_STATUS } from '../utils/constants.js';
 
 const USER_FIELDS = 'name email department role avatarUrl';
 
-/**
- * GET /api/moderation/reports
- * Retrieve reports with target item previews for administrator moderation
- */
 export const getReports = async (req, res, next) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -37,7 +33,6 @@ export const getReports = async (req, res, next) => {
         .lean(),
     ]);
 
-    // Fetch previews of target items so moderators can inspect content immediately
     const postIds = reports
       .filter((r) => r.targetType === 'post')
       .map((r) => r.targetId);
@@ -90,10 +85,6 @@ export const getReports = async (req, res, next) => {
   }
 };
 
-/**
- * PATCH /api/moderation/reports/:reportId
- * Process and resolve a content moderation report
- */
 export const resolveReport = async (req, res, next) => {
   try {
     const { reportId } = req.params;
@@ -128,7 +119,6 @@ export const resolveReport = async (req, res, next) => {
     report.reviewedBy = req.user._id;
     report.reviewedAt = new Date();
 
-    // Perform moderation action on target content
     if (resolution === 'hidden') {
       if (report.targetType === 'post') {
         await DiscussionPost.findByIdAndUpdate(report.targetId, {
@@ -141,7 +131,6 @@ export const resolveReport = async (req, res, next) => {
       }
     } else if (resolution === 'deleted') {
       if (report.targetType === 'post') {
-        // Cascade delete post and all associations
         await Promise.all([
           DiscussionComment.deleteMany({ post: report.targetId }),
           DiscussionVote.deleteMany({ post: report.targetId }),
@@ -149,7 +138,6 @@ export const resolveReport = async (req, res, next) => {
           DiscussionPost.findByIdAndDelete(report.targetId),
         ]);
       } else {
-        // Delete comment and decrement post comment count
         const comment = await DiscussionComment.findById(report.targetId);
         if (comment) {
           await Promise.all([

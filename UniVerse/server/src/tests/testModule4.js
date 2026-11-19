@@ -72,13 +72,11 @@ const runModule4Tests = async () => {
     baseUrl = `http://127.0.0.1:${port}`;
     console.log(`[Test Suite] Test server running on ${baseUrl}\n`);
 
-    // Setup Test Users
     const testEmail1 = `mod4_student1_${Date.now()}@universe.edu`;
     const testEmail2 = `mod4_student2_${Date.now()}@universe.edu`;
     const adminEmail = `mod4_admin_${Date.now()}@universe.edu`;
     const password = 'TestSecure2026!';
 
-    // Register Student 1
     const regRes1 = await request('/api/auth/register', {
       method: 'POST',
       body: {
@@ -94,7 +92,6 @@ const runModule4Tests = async () => {
     const token1 = regRes1.data.token;
     const authHeaders1 = { Authorization: `Bearer ${token1}` };
 
-    // Register Student 2
     const regRes2 = await request('/api/auth/register', {
       method: 'POST',
       body: {
@@ -110,7 +107,6 @@ const runModule4Tests = async () => {
     const token2 = regRes2.data.token;
     const authHeaders2 = { Authorization: `Bearer ${token2}` };
 
-    // Create an Admin user
     const adminUser = await User.create({
       name: 'Moderation Admin',
       email: adminEmail,
@@ -128,12 +124,10 @@ const runModule4Tests = async () => {
     const adminToken = adminLoginRes.data.token;
     const adminHeaders = { Authorization: `Bearer ${adminToken}` };
 
-    // 1. Discovery Feed
     const feedRes = await request('/api/discussions');
     assert(feedRes.status === 200, 'GET /api/discussions public feed returns 200');
     assert(Array.isArray(feedRes.data.discussions), 'Discussions feed is an array');
 
-    // 2. Create Discussion (Question)
     const createRes = await request('/api/discussions', {
       method: 'POST',
       headers: authHeaders1,
@@ -152,7 +146,6 @@ const runModule4Tests = async () => {
     assert(createdPost.type === 'question', 'Post type is question');
     assert(createdPost.author.name === 'Discussion Tester One', 'Post author properly derived from auth token');
 
-    // 3. Discussion Detail
     const detailRes = await request(`/api/discussions/${postId}`, {
       headers: authHeaders1,
     });
@@ -160,7 +153,6 @@ const runModule4Tests = async () => {
     assert(detailRes.data.discussion.views >= 1, 'Views counter atomically increments on retrieval');
     assert(detailRes.data.discussion.isAuthor === true, 'isAuthor flag is true for creator');
 
-    // 4. Add Answer Comment (Student 2 answers Question)
     const commentRes = await request(`/api/discussions/${postId}/comments`, {
       method: 'POST',
       headers: authHeaders2,
@@ -171,11 +163,9 @@ const runModule4Tests = async () => {
     assert(commentRes.status === 201, 'POST /api/discussions/:id/comments adds an answer (201)');
     const commentId = commentRes.data.comment.id || commentRes.data.comment._id;
 
-    // Verify comment count on post updated
     const postAfterComment = await request(`/api/discussions/${postId}`);
     assert(postAfterComment.data.discussion.commentCount === 1, 'Post commentCount atomically incremented to 1');
 
-    // 5. Unauthorized accept answer attempt (Student 2 tries to accept answer on Student 1 question)
     const unauthAccept = await request(`/api/discussions/${postId}/accepted-answer`, {
       method: 'PATCH',
       headers: authHeaders2,
@@ -183,7 +173,6 @@ const runModule4Tests = async () => {
     });
     assert(unauthAccept.status === 403, 'Non-owner cannot mark answer as accepted (403 Forbidden)');
 
-    // 6. Authorized accept answer (Student 1 accepts answer)
     const authAccept = await request(`/api/discussions/${postId}/accepted-answer`, {
       method: 'PATCH',
       headers: authHeaders1,
@@ -192,7 +181,6 @@ const runModule4Tests = async () => {
     assert(authAccept.status === 200, 'Question owner can mark answer as accepted (200)');
     assert(authAccept.data.isResolved === true, 'Post marked resolved after answer acceptance');
 
-    // 7. Upvoting & Duplicate Prevention
     const voteRes = await request(`/api/discussions/${postId}/vote`, {
       method: 'POST',
       headers: authHeaders2,
@@ -201,14 +189,12 @@ const runModule4Tests = async () => {
     assert(voteRes.data.hasUpvoted === true, 'hasUpvoted returns true');
     assert(voteRes.data.upvoteCount === 1, 'upvoteCount increments to 1');
 
-    // Repeat vote (duplicate check)
     const repeatVote = await request(`/api/discussions/${postId}/vote`, {
       method: 'POST',
       headers: authHeaders2,
     });
     assert(repeatVote.status === 200 && repeatVote.data.upvoteCount === 1, 'Duplicate vote does not inflate upvote count');
 
-    // Remove upvote
     const removeVote = await request(`/api/discussions/${postId}/vote`, {
       method: 'DELETE',
       headers: authHeaders2,
@@ -217,7 +203,6 @@ const runModule4Tests = async () => {
     assert(removeVote.data.hasUpvoted === false, 'hasUpvoted returns false');
     assert(removeVote.data.upvoteCount === 0, 'upvoteCount decrements to 0');
 
-    // 8. Bookmarking / Saving
     const saveRes = await request(`/api/discussions/${postId}/save`, {
       method: 'POST',
       headers: authHeaders2,
@@ -230,14 +215,12 @@ const runModule4Tests = async () => {
     assert(mySaved.status === 200, 'GET /api/discussions/saved returns user bookmarks');
     assert(mySaved.data.discussions.some((d) => (d.id || d._id) === postId), 'Saved list contains bookmarked post');
 
-    // 9. My Discussions
     const myPosts = await request('/api/discussions/my-posts', {
       headers: authHeaders1,
     });
     assert(myPosts.status === 200, 'GET /api/discussions/my-posts returns authored posts');
     assert(myPosts.data.discussions.some((d) => (d.id || d._id) === postId), 'My posts list contains created post');
 
-    // 10. Content Reporting
     const reportRes = await request(`/api/discussions/${postId}/report`, {
       method: 'POST',
       headers: authHeaders2,
@@ -248,7 +231,6 @@ const runModule4Tests = async () => {
     });
     assert(reportRes.status === 201, 'POST /api/discussions/:id/report submits report (201)');
 
-    // 11. Moderation Queue (Admin only)
     const studentModCheck = await request('/api/moderation/reports', {
       headers: authHeaders1,
     });
@@ -262,7 +244,6 @@ const runModule4Tests = async () => {
     const createdReport = reports.find((r) => r.targetId.toString() === postId.toString());
     assert(!!createdReport, 'Report appears in admin moderation queue');
 
-    // Resolve report by dismissal
     if (createdReport) {
       const resolveRes = await request(`/api/moderation/reports/${createdReport.id || createdReport._id}`, {
         method: 'PATCH',
@@ -276,7 +257,6 @@ const runModule4Tests = async () => {
       assert(resolveRes.status === 200, 'Admin resolves moderation report (200)');
     }
 
-    // 12. Update discussion
     const updateRes = await request(`/api/discussions/${postId}`, {
       method: 'PATCH',
       headers: authHeaders1,
@@ -286,14 +266,12 @@ const runModule4Tests = async () => {
     });
     assert(updateRes.status === 200, 'PATCH /api/discussions/:id updates post (200)');
 
-    // 13. Cascade Delete discussion
     const deleteRes = await request(`/api/discussions/${postId}`, {
       method: 'DELETE',
       headers: authHeaders1,
     });
     assert(deleteRes.status === 200, 'DELETE /api/discussions/:id deletes post (200)');
 
-    // Verify cascade cleanup
     const remainingComments = await DiscussionComment.countDocuments({ post: postId });
     const remainingVotes = await DiscussionVote.countDocuments({ post: postId });
     const remainingSaved = await SavedDiscussion.countDocuments({ post: postId });
@@ -301,13 +279,11 @@ const runModule4Tests = async () => {
     assert(remainingVotes === 0, 'Associated votes cascade deleted');
     assert(remainingSaved === 0, 'Associated saved bookmarks cascade deleted');
 
-    // Clean up test users
     await Promise.all([
       User.deleteMany({ _id: { $in: [regRes1.data.user._id, regRes2.data.user._id, adminUser._id] } }),
       ContentReport.deleteMany({ reporter: { $in: [regRes1.data.user._id, regRes2.data.user._id] } }),
     ]);
 
-    // 14. Regressions Check on Modules 1, 2, 3
     console.log('\n--- Running Regression Checks on Modules 1, 2, and 3 ---');
     const healthCheck = await request('/api/health');
     assert(healthCheck.status === 200 && healthCheck.data.status === 'healthy', 'Module 1/Core: Health check is healthy (200)');

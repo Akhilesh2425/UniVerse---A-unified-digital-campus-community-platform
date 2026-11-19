@@ -7,7 +7,6 @@ import {
   Mail,
   Building,
   GraduationCap,
-  Sparkles,
   CheckCircle2,
   AlertCircle,
   Save,
@@ -96,15 +95,14 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+    <div className="max-w-5xl mx-auto space-y-4">
+      <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-[#334155] pb-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Student Profile
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Manage your verified identity and academic credentials on UniVerse
+          <p className="text-xs text-slate-500 dark:text-[#A8B4C7]">
+            Academic identity and verified credentials on UniVerse
           </p>
         </div>
 
@@ -115,254 +113,272 @@ const ProfilePage = () => {
             setSuccessMessage('');
             setErrorMessage('');
           }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${
             isEditing
-              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-              : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm'
+              ? 'bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#334155]'
+              : 'bg-brand-600 hover:bg-brand-700 text-white'
           }`}
         >
           {isEditing ? 'Cancel Editing' : 'Edit Profile'}
         </button>
       </div>
 
-      {/* Messages */}
       {successMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>{successMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+        <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
-      {/* Profile Card */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-8">
-        {/* Avatar & Role Header */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-8 border-b border-slate-100">
-          <div className="relative">
-            {formData.avatarUrl ? (
-              <img
-                src={formData.avatarUrl}
-                alt={user?.name}
-                className="w-24 h-24 rounded-2xl object-cover ring-4 ring-indigo-50"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div
-              className={`w-24 h-24 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-800 text-white items-center justify-center font-extrabold text-3xl shadow-lg shadow-indigo-100 ${
-                formData.avatarUrl ? 'hidden' : 'flex'
-              }`}
-            >
-              {user?.name?.charAt(0)?.toUpperCase()}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-[#172033] rounded-2xl border border-slate-200/90 dark:border-[#334155] p-5 shadow-xs flex flex-col items-center text-center justify-between">
+          <div className="w-full flex flex-col items-center">
+            <div className="relative mb-3">
+              {formData.avatarUrl ? (
+                <img
+                  src={formData.avatarUrl}
+                  alt={user?.name}
+                  className="w-20 h-20 rounded-2xl object-cover ring-2 ring-brand-500/30"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div
+                className={`w-20 h-20 rounded-2xl bg-brand-600 text-white items-center justify-center font-extrabold text-2xl shadow-xs ${
+                  formData.avatarUrl ? 'hidden' : 'flex'
+                }`}
+              >
+                {user?.name?.charAt(0)?.toUpperCase()}
+              </div>
+            </div>
+
+            <h2 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">
+              {user?.name}
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-[#A8B4C7] mt-0.5 truncate max-w-full">
+              {user?.email}
+            </p>
+
+            <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                {user?.role}
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-[#1E293B] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#334155]">
+                {user?.department?.split(' ')[0] || 'Campus'}
+              </span>
             </div>
           </div>
 
-          <div className="text-center sm:text-left space-y-1 flex-1">
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <h2 className="text-xl font-extrabold text-slate-900">{user?.name}</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
-                {user?.role}
+          <div className="w-full border-t border-slate-100 dark:border-[#334155] mt-4 pt-3 text-left space-y-2 text-xs">
+            <div className="flex items-center justify-between text-slate-500 dark:text-[#A8B4C7]">
+              <span>Department</span>
+              <span className="font-semibold text-slate-800 dark:text-[#F1F5F9] truncate max-w-[150px] text-right">
+                {user?.department}
               </span>
             </div>
-            <p className="text-sm text-slate-500">{user?.email}</p>
-            <p className="text-xs text-slate-400">
-              {user?.department} • {user?.academicYear}
-            </p>
+            <div className="flex items-center justify-between text-slate-500 dark:text-[#A8B4C7]">
+              <span>Academic Year</span>
+              <span className="font-semibold text-slate-800 dark:text-[#F1F5F9]">
+                {user?.academicYear}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-slate-500 dark:text-[#A8B4C7]">
+              <span>Status</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                Verified Student
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* View / Edit Form */}
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Full Name */}
+        <div className="lg:col-span-2 bg-white dark:bg-[#172033] rounded-2xl border border-slate-200/90 dark:border-[#334155] p-5 shadow-xs flex flex-col justify-between">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-[#A8B4C7] mb-1">
+                  Full Name
+                </label>
+                {isEditing ? (
+                  <div className="relative">
+                    <User className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleChange}
+                      className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#334155] bg-white dark:bg-[#1E293B] text-slate-800 dark:text-[#F1F5F9] text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-xs font-semibold text-slate-800 dark:text-[#F1F5F9] py-1.5 px-3 bg-slate-50 dark:bg-[#1E293B] border border-slate-200/80 dark:border-[#334155] rounded-xl">
+                    {user?.name}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-[#A8B4C7] mb-1">
+                  Campus Email (Verified)
+                </label>
+                <div className="relative">
+                  <Mail className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="email"
+                    disabled
+                    value={user?.email || ''}
+                    className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#334155] bg-slate-50 dark:bg-[#1E293B] text-slate-500 dark:text-slate-400 text-xs cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-[#A8B4C7] mb-1">
+                  Department
+                </label>
+                {isEditing ? (
+                  <div className="relative">
+                    <Building className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <select
+                      name="department"
+                      value={formData.department}
+                      onChange={handleChange}
+                      className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#334155] bg-white dark:bg-[#1E293B] text-slate-800 dark:text-[#F1F5F9] text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    >
+                      {DEPARTMENTS.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <p className="text-xs font-semibold text-slate-800 dark:text-[#F1F5F9] py-1.5 px-3 bg-slate-50 dark:bg-[#1E293B] border border-slate-200/80 dark:border-[#334155] rounded-xl truncate">
+                    {user?.department}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-[#A8B4C7] mb-1">
+                  Academic Year
+                </label>
+                {isEditing ? (
+                  <div className="relative">
+                    <GraduationCap className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <select
+                      name="academicYear"
+                      value={formData.academicYear}
+                      onChange={handleChange}
+                      className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#334155] bg-white dark:bg-[#1E293B] text-slate-800 dark:text-[#F1F5F9] text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    >
+                      {ACADEMIC_YEARS.map((y) => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <p className="text-xs font-semibold text-slate-800 dark:text-[#F1F5F9] py-1.5 px-3 bg-slate-50 dark:bg-[#1E293B] border border-slate-200/80 dark:border-[#334155] rounded-xl">
+                    {user?.academicYear}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                Full Name
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-[#A8B4C7] mb-1">
+                Interests & Campus Activities {isEditing && '(comma-separated)'}
               </label>
               {isEditing ? (
                 <div className="relative">
-                  <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    name="name"
-                    required
-                    value={formData.name}
+                    name="interests"
+                    value={formData.interests}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    placeholder="e.g. Artificial Intelligence, Robotics, Hackathons"
+                    className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#334155] bg-white dark:bg-[#1E293B] text-slate-800 dark:text-[#F1F5F9] text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
                   />
                 </div>
               ) : (
-                <p className="text-sm font-semibold text-slate-800 py-2.5 px-3 bg-slate-50 rounded-xl">
-                  {user?.name}
-                </p>
-              )}
-            </div>
-
-            {/* Email (Read Only per specification) */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                Campus Email (Read-Only)
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="email"
-                  disabled
-                  value={user?.email || ''}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 text-sm cursor-not-allowed"
-                />
-              </div>
-            </div>
-
-            {/* Department */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                Department
-              </label>
-              {isEditing ? (
-                <div className="relative">
-                  <Building className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <select
-                    name="department"
-                    value={formData.department}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  >
-                    {DEPARTMENTS.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex flex-wrap gap-1.5 py-1 min-h-[32px] items-center">
+                  {user?.interests && user.interests.length > 0 ? (
+                    user.interests.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#1E293B] text-slate-700 dark:text-slate-300 text-xs font-medium border border-slate-200 dark:border-[#334155]"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-slate-400 italic">No interests specified yet.</span>
+                  )}
                 </div>
-              ) : (
-                <p className="text-sm font-semibold text-slate-800 py-2.5 px-3 bg-slate-50 rounded-xl">
-                  {user?.department}
-                </p>
               )}
             </div>
 
-            {/* Academic Year */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                Academic Year
-              </label>
-              {isEditing ? (
+            {isEditing && (
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-[#A8B4C7] mb-1">
+                  Profile Picture URL (Optional)
+                </label>
                 <div className="relative">
-                  <GraduationCap className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <select
-                    name="academicYear"
-                    value={formData.academicYear}
+                  <Camera className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="url"
+                    name="avatarUrl"
+                    value={formData.avatarUrl}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  >
-                    {ACADEMIC_YEARS.map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="https://images.unsplash.com/photo-..."
+                    className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#334155] bg-white dark:bg-[#1E293B] text-slate-800 dark:text-[#F1F5F9] text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  />
                 </div>
-              ) : (
-                <p className="text-sm font-semibold text-slate-800 py-2.5 px-3 bg-slate-50 rounded-xl">
-                  {user?.academicYear}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Interests */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-              Interests & Campus Activities {isEditing && '(comma-separated)'}
-            </label>
-            {isEditing ? (
-              <div className="relative">
-                <Tag className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  name="interests"
-                  value={formData.interests}
-                  onChange={handleChange}
-                  placeholder="e.g. Artificial Intelligence, Robotics, Hackathons, Basketball"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                />
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2 py-2">
-                {user?.interests && user.interests.length > 0 ? (
-                  user.interests.map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200"
-                    >
-                      {tag}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-xs text-slate-400 italic">No interests specified yet.</span>
-                )}
               </div>
             )}
-          </div>
 
-          {/* Avatar URL */}
-          {isEditing && (
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                Profile Avatar Picture URL
-              </label>
-              <div className="relative">
-                <Camera className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="url"
-                  name="avatarUrl"
-                  value={formData.avatarUrl}
-                  onChange={handleChange}
-                  placeholder="https://images.unsplash.com/photo-..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                />
+            {isEditing && (
+              <div className="pt-3 border-t border-slate-100 dark:border-[#334155] flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1E293B] transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                >
+                  {loading ? (
+                    <>
+                      <Spinner size="sm" className="border-white" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </button>
               </div>
-            </div>
-          )}
-
-          {isEditing && (
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm disabled:opacity-50"
-              >
-                {loading ? (
-                  <>
-                    <Spinner size="sm" className="border-white" />
-                    <span>Saving Changes...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    <span>Save Profile</span>
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-        </form>
+            )}
+          </form>
+        </div>
       </div>
     </div>
   );

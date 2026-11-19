@@ -29,7 +29,6 @@ const seedDemo = async () => {
     await mongoose.connect(uri, { dbName: process.env.DB_NAME || 'universe' });
     console.log('[Seed Demo] Connected to database.');
 
-    // Find or create admin user
     let admin = await User.findOne({ role: ROLES.ADMIN });
     if (!admin) {
       admin = await User.create({
@@ -45,7 +44,6 @@ const seedDemo = async () => {
       console.log('[Seed Demo] Created default admin account.');
     }
 
-    // Realistic Demo Events
     const now = new Date();
     const day = 24 * 60 * 60 * 1000;
 
@@ -110,7 +108,7 @@ const seedDemo = async () => {
         startDate: new Date(now.getTime() + 14 * day),
         endDate: new Date(now.getTime() + 14 * day + 5 * 60 * 60 * 1000),
         registrationDeadline: null,
-        maxCapacity: null, // Unlimited
+        maxCapacity: null, 
         registeredCount: 0,
         posterUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&auto=format&fit=crop&q=80',
         createdBy: admin._id,
@@ -123,7 +121,6 @@ const seedDemo = async () => {
       console.log(`[Seed Demo] Seeded ${demoEvents.length} campus events.`);
     }
 
-    // Realistic Demo Announcements
     const demoAnnouncements = [
       {
         title: 'Midterm Examination Schedule & Room Allocations Published',
@@ -169,9 +166,6 @@ const seedDemo = async () => {
       console.log(`[Seed Demo] Seeded ${demoAnnouncements.length} announcements.`);
     }
 
-    // ==========================================
-    // MODULE 3: SEED GROUPS & COMMUNITIES
-    // ==========================================
     const existingGroupsCount = await Group.countDocuments();
     if (existingGroupsCount === 0) {
       const demoGroups = [
@@ -216,7 +210,7 @@ const seedDemo = async () => {
           category: 'Entrepreneurship',
           tags: ['Startups', 'Venture Capital', 'Pitching', 'Product Design'],
           coverImage: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200&auto=format&fit=crop&q=80',
-          visibility: GROUP_VISIBILITY.PRIVATE, // Private group to test join requests
+          visibility: GROUP_VISIBILITY.PRIVATE, 
           rules: [
             'All project ideas and pitch decks shared within the incubator remain confidential.',
             'Active participation in bi-weekly progress updates is required.',
@@ -263,7 +257,6 @@ const seedDemo = async () => {
       for (const groupData of demoGroups) {
         const createdGroup = await Group.create(groupData);
 
-        // Create owner membership
         await GroupMembership.create({
           group: createdGroup._id,
           user: admin._id,
@@ -271,7 +264,6 @@ const seedDemo = async () => {
           joinedAt: new Date(),
         });
 
-        // Create a welcome post in each group
         const post = await GroupPost.create({
           group: createdGroup._id,
           author: admin._id,
@@ -280,7 +272,6 @@ const seedDemo = async () => {
           commentCount: 1,
         });
 
-        // Add a demo comment
         await GroupComment.create({
           post: post._id,
           group: createdGroup._id,

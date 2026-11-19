@@ -4,7 +4,6 @@ import { getReports, resolveReport } from '../controllers/moderationController.j
 
 const router = express.Router();
 
-// All moderation routes require authenticated administrator privileges
 router.use(authenticate, requireAdmin);
 
 router.get('/reports', getReports);

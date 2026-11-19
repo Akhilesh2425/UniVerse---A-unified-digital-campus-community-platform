@@ -41,7 +41,6 @@ const startServer = async () => {
 
     bindPort();
 
-    // Graceful shutdown handling for standard termination
     const shutdown = async (signal) => {
       console.log(`\n[UniVerse Server] Received ${signal}. Shutting down gracefully...`);
       if (server) {
@@ -55,18 +54,15 @@ const startServer = async () => {
         process.exit(0);
       }
 
-      // Force exit if hanging
       setTimeout(() => {
         console.error('[UniVerse Server] Forceful shutdown initiated due to timeout.');
         process.exit(1);
       }, 3000);
     };
 
-    // Standard signals
     process.on('SIGINT', () => shutdown('SIGINT'));
     process.on('SIGTERM', () => shutdown('SIGTERM'));
 
-    // Nodemon restart signal handling (SIGUSR2)
     process.once('SIGUSR2', async () => {
       if (server) {
         server.close(async () => {
@@ -78,7 +74,6 @@ const startServer = async () => {
       }
     });
 
-    // Prevent uncaught errors from crashing silently
     process.on('unhandledRejection', (reason, promise) => {
       console.error('[UniVerse Server] Unhandled Promise Rejection at:', promise, 'reason:', reason);
     });

@@ -10,7 +10,6 @@ import {
   MessagesSquare,
   HelpCircle,
   BookmarkCheck,
-  Sparkles,
   AlertCircle,
   TrendingUp,
   Tag,
@@ -35,7 +34,6 @@ const DiscussionsFeedPage = () => {
   const { isAuthenticated } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // State initialized from URL query parameters for shareable/bookmarkable URLs
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All');
   const [selectedType, setSelectedType] = useState(searchParams.get('type') || '');
@@ -48,7 +46,6 @@ const DiscussionsFeedPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Sync state to URL search parameters
   useEffect(() => {
     const params = {};
     if (search.trim()) params.search = search.trim();
@@ -60,7 +57,6 @@ const DiscussionsFeedPage = () => {
     setSearchParams(params, { replace: true });
   }, [search, selectedCategory, selectedType, selectedSort, page, setSearchParams]);
 
-  // Fetch discussions with debounced search
   const fetchDiscussions = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -110,18 +106,17 @@ const DiscussionsFeedPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Hero Banner with Call to Action */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 text-white p-6 sm:p-8 shadow-xl">
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="rounded-2xl bg-white dark:bg-[#172033] border border-slate-200/90 dark:border-[#334155] p-6 sm:p-8 shadow-xs">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="max-w-2xl space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11px] font-semibold text-indigo-200 border border-white/10">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
-              <span>Campus Academic Hub & Knowledge Exchange</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[11px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+              <MessagesSquare className="w-3.5 h-3.5" />
+              <span>Academic Forum & Knowledge Exchange</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               Student Discussions & Questions
             </h1>
-            <p className="text-xs sm:text-sm text-indigo-100/80 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-[#A8B4C7] leading-relaxed">
               Ask coding and academic questions, share curated resources, discuss university events,
               and connect with peers across all engineering departments.
             </p>
@@ -130,7 +125,7 @@ const DiscussionsFeedPage = () => {
           <div className="flex flex-wrap items-center gap-2.5">
             <Link
               to="/discussions/create"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-indigo-500 hover:bg-indigo-400 text-white text-xs sm:text-sm font-bold shadow-lg shadow-indigo-950/40 hover:scale-[1.02] transition transform"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white text-xs sm:text-sm font-bold shadow-lg shadow-brand-950/40 hover:scale-[1.02] transition transform"
             >
               <Plus className="w-4 h-4" />
               <span>New Discussion</span>
@@ -147,13 +142,10 @@ const DiscussionsFeedPage = () => {
           </div>
         </div>
 
-        {/* Ambient background decoration */}
-        <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* Main Grid: Feed on Left (8 cols) and Sidebar on Right (4 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Filters and Feed */}
         <div className="lg:col-span-8 space-y-5">
           <DiscussionFilters
             search={search}
@@ -179,66 +171,64 @@ const DiscussionsFeedPage = () => {
             onReset={handleResetFilters}
           />
 
-          {/* Results count banner */}
-          <div className="flex items-center justify-between px-1 text-xs text-slate-500">
+          <div className="flex items-center justify-between px-1 text-xs text-slate-500 dark:text-slate-400">
             <span>
-              Showing <strong className="text-slate-800">{discussions.length}</strong> of{' '}
-              <strong className="text-slate-800">{totalPosts}</strong> discussions
+              Showing <strong className="text-slate-800 dark:text-white">{discussions.length}</strong> of{' '}
+              <strong className="text-slate-800 dark:text-white">{totalPosts}</strong> discussions
             </span>
             {selectedCategory !== 'All' && (
-              <span className="font-medium text-indigo-600">Category: {selectedCategory}</span>
+              <span className="font-medium text-brand-600 dark:text-brand-400">Category: {selectedCategory}</span>
             )}
           </div>
 
-          {/* Feed Content */}
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs animate-pulse space-y-3"
+                  className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-xs animate-pulse space-y-3"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-slate-200" />
+                    <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800" />
                     <div className="space-y-1.5 flex-1">
-                      <div className="h-3 w-32 bg-slate-200 rounded" />
-                      <div className="h-2 w-24 bg-slate-100 rounded" />
+                      <div className="h-3 w-32 bg-slate-200 dark:bg-slate-850 rounded" />
+                      <div className="h-2 w-24 bg-slate-100 dark:bg-slate-800 rounded" />
                     </div>
-                    <div className="h-5 w-16 bg-slate-100 rounded-full" />
+                    <div className="h-5 w-16 bg-slate-100 dark:bg-slate-800 rounded-full" />
                   </div>
-                  <div className="h-4 w-3/4 bg-slate-200 rounded" />
-                  <div className="h-3 w-full bg-slate-100 rounded" />
-                  <div className="h-3 w-5/6 bg-slate-100 rounded" />
-                  <div className="pt-3 border-t border-slate-100 flex gap-2">
-                    <div className="h-7 w-16 bg-slate-100 rounded-xl" />
-                    <div className="h-7 w-20 bg-slate-100 rounded-xl" />
+                  <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-850 rounded" />
+                  <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded" />
+                  <div className="h-3 w-5/6 bg-slate-100 dark:bg-slate-800 rounded" />
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+                    <div className="h-7 w-16 bg-slate-100 dark:bg-slate-800 rounded-xl" />
+                    <div className="h-7 w-20 bg-slate-100 dark:bg-slate-800 rounded-xl" />
                   </div>
                 </div>
               ))}
             </div>
           ) : error ? (
-            <div className="p-8 rounded-2xl bg-white border border-rose-200 text-center space-y-3 shadow-xs">
-              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+            <div className="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900 text-center space-y-3 shadow-xs">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
                 <AlertCircle className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Failed to Load Discussions</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">{error}</p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Failed to Load Discussions</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">{error}</p>
               <button
                 type="button"
                 onClick={fetchDiscussions}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition"
+                className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-700 transition"
               >
                 Retry Connection
               </button>
             </div>
           ) : discussions.length === 0 ? (
-            <div className="p-12 rounded-3xl bg-white border border-slate-200 text-center space-y-4 shadow-xs">
-              <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto shadow-inner">
+            <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-4 shadow-xs">
+              <div className="w-16 h-16 rounded-3xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center mx-auto shadow-inner">
                 <MessagesSquare className="w-8 h-8" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">No Discussions Found</h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Discussions Found</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
                   {search || selectedCategory !== 'All' || selectedType
                     ? 'No discussions match your filter criteria. Try adjusting your search keywords.'
                     : 'Be the first student to start a discussion or ask an academic question!'}
@@ -247,7 +237,7 @@ const DiscussionsFeedPage = () => {
               <div className="flex items-center justify-center gap-3 pt-2">
                 <Link
                   to="/discussions/create"
-                  className="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700 transition"
+                  className="px-4 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl hover:bg-brand-700 transition shadow-md"
                 >
                   Start First Discussion
                 </Link>
@@ -255,7 +245,7 @@ const DiscussionsFeedPage = () => {
                   <button
                     type="button"
                     onClick={handleResetFilters}
-                    className="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-semibold rounded-xl hover:bg-slate-50 transition"
+                    className="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                   >
                     Clear Filters
                   </button>
@@ -270,28 +260,27 @@ const DiscussionsFeedPage = () => {
             </div>
           )}
 
-          {/* Pagination Controls */}
           {totalPages > 1 && !loading && (
-            <div className="flex items-center justify-between bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
               <button
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Previous
               </button>
 
-              <span className="text-xs font-semibold text-slate-600">
-                Page <span className="text-indigo-600 font-bold">{page}</span> of {totalPages}
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                Page <span className="text-brand-600 dark:text-brand-400 font-bold">{page}</span> of {totalPages}
               </span>
 
               <button
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 Next
                 <ChevronRight className="w-4 h-4" />
@@ -300,29 +289,27 @@ const DiscussionsFeedPage = () => {
           )}
         </div>
 
-        {/* Right Column: Sidebar (4 cols) */}
         <div className="lg:col-span-4 space-y-5">
-          {/* Quick Navigation Card */}
           {isAuthenticated && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 My Knowledge Hub
               </h3>
               <div className="space-y-1.5">
                 <Link
                   to="/discussions/my-posts"
-                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-indigo-50/70 text-slate-700 hover:text-indigo-700 text-xs font-semibold transition group"
+                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-brand-50/70 dark:hover:bg-brand-950/40 text-slate-700 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-300 text-xs font-semibold transition group"
                 >
                   <span className="flex items-center gap-2">
-                    <MessagesSquare className="w-4 h-4 text-indigo-500" />
+                    <MessagesSquare className="w-4 h-4 text-brand-500" />
                     My Created Posts
                   </span>
-                  <span className="text-slate-400 group-hover:text-indigo-600">→</span>
+                  <span className="text-slate-400 group-hover:text-brand-600">→</span>
                 </Link>
 
                 <Link
                   to="/discussions/saved"
-                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-50/70 text-slate-700 hover:text-amber-800 text-xs font-semibold transition group"
+                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-50/70 dark:hover:bg-amber-950/40 text-slate-700 dark:text-slate-300 hover:text-amber-800 dark:hover:text-amber-300 text-xs font-semibold transition group"
                 >
                   <span className="flex items-center gap-2">
                     <BookmarkCheck className="w-4 h-4 text-amber-500" />
@@ -334,10 +321,9 @@ const DiscussionsFeedPage = () => {
             </div>
           )}
 
-          {/* Popular Campus Topics / Tags */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
-            <div className="flex items-center gap-2 text-slate-800">
-              <Tag className="w-4 h-4 text-indigo-600" />
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-3">
+            <div className="flex items-center gap-2 text-slate-800 dark:text-white">
+              <Tag className="w-4 h-4 text-brand-600 dark:text-brand-400" />
               <h3 className="text-sm font-bold">Trending Campus Topics</h3>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -348,8 +334,8 @@ const DiscussionsFeedPage = () => {
                   onClick={() => handleTagClick(t)}
                   className={`text-xs px-2.5 py-1 rounded-lg border transition font-medium ${
                     search === t
-                      ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
+                      ? 'bg-brand-600 text-white border-brand-600'
+                      : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-brand-300 dark:hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50/50 dark:hover:bg-brand-950/40'
                   }`}
                 >
                   #{t}
@@ -358,13 +344,12 @@ const DiscussionsFeedPage = () => {
             </div>
           </div>
 
-          {/* Community Guidelines */}
-          <div className="bg-gradient-to-br from-indigo-50/80 to-slate-50 rounded-2xl border border-indigo-100 p-5 shadow-xs space-y-3 text-xs text-slate-600">
-            <div className="flex items-center gap-2 text-indigo-900 font-bold">
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+          <div className="bg-gradient-to-br from-brand-50/80 to-slate-50 dark:from-slate-900 dark:to-slate-850 rounded-2xl border border-brand-100 dark:border-slate-800 p-5 shadow-xs space-y-3 text-xs text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-brand-900 dark:text-brand-300 font-bold">
+              <ShieldCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
               <span>Campus Community Guidelines</span>
             </div>
-            <ul className="space-y-2 list-disc list-inside leading-relaxed text-[11px] text-slate-600">
+            <ul className="space-y-2 list-disc list-inside leading-relaxed text-[11px] text-slate-600 dark:text-slate-400">
               <li>Keep inquiries respectful and academically honest.</li>
               <li>Tag code snippets and provide reproduction details.</li>
               <li>Mark the most helpful answer as <strong>Accepted</strong>.</li>

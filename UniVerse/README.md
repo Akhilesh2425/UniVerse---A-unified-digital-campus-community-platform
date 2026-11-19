@@ -1,8 +1,10 @@
 # UniVerse — Unified Digital Campus Platform
 
-UniVerse is a full-stack college campus web application built with the **MERN stack** (MongoDB Atlas, Express.js, React.js, Node.js) and styled with Tailwind CSS.
+> **Full Documentation:** For complete numerical metrics (40,301 LOC, 145 REST API Endpoints, 36 Models, 41 Pages), granular API specifications, and architectural documentation, please see [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md).
 
-It provides an authenticated, campus-specific experience connecting students to campus events, activity registrations, and official announcements.
+UniVerse is an enterprise-grade full-stack college campus web application built with the **MERN stack** (MongoDB Atlas, Express.js, React.js, Node.js) and styled with Tailwind CSS.
+
+It provides an authenticated, campus-specific experience connecting students to campus events, activity registrations, community groups, official clubs, grievance ticketing, academic discussions, dynamic administrative forms, and official announcements.
 
 ---
 
