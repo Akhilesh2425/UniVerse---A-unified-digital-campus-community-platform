@@ -591,23 +591,23 @@ const GroupDetailsPage = () => {
       )}
 
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="relative h-56 sm:h-72 w-full bg-slate-900 overflow-hidden">
+        <div className="relative min-h-[220px] sm:min-h-[280px] w-full bg-slate-900 overflow-hidden flex flex-col justify-end p-6 sm:p-8">
           {group.coverImage ? (
             <img
               src={group.coverImage}
               alt={group.name}
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-brand-900 via-navy to-slate-950" />
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-brand-900 via-navy-900 to-slate-950" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/60 to-transparent" />
 
-          <div className="absolute bottom-6 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div className="space-y-2">
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-auto">
+            <div className="space-y-2 max-w-2xl">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={group.category}>{group.category}</Badge>
                 <span
@@ -638,7 +638,7 @@ const GroupDetailsPage = () => {
               </h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
               <button
                 type="button"
                 onClick={handleOpenQrModal}

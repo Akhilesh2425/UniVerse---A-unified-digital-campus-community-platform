@@ -183,9 +183,9 @@ const ClubDetailsPage = () => {
         </div>
 
         <div className="p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 -mt-16 sm:-mt-20">
-            <div className="flex items-start sm:items-end gap-5">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-white dark:bg-slate-800 p-1.5 border-4 border-white dark:border-slate-900 shadow-xl flex items-center justify-center overflow-hidden shrink-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white dark:bg-slate-800 p-1.5 border-4 border-white dark:border-slate-900 shadow-xl flex items-center justify-center overflow-hidden shrink-0 -mt-14 sm:-mt-16 relative z-10">
                 {club.logo ? (
                   <img src={club.logo} alt={club.name} className="w-full h-full object-contain" />
                 ) : (
@@ -198,10 +198,10 @@ const ClubDetailsPage = () => {
                 <span className="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
                   {club.category}
                 </span>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                   {club.name}
                 </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-3">
+                <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
                   <span>{club.memberCount || 1} Registered Members</span>
                   <span>•</span>
                   <span>{events.length} Campus Events</span>

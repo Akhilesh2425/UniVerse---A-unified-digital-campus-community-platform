@@ -61,16 +61,16 @@ const RootRedirect = () => {
 
 const NotFoundPage = () => (
   <div className="py-24 text-center max-w-md mx-auto">
-    <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-extrabold text-2xl mx-auto mb-4">
+    <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-extrabold text-2xl mx-auto mb-4">
       404
     </div>
-    <h1 className="text-2xl font-bold text-slate-900">Page Not Found</h1>
-    <p className="text-sm text-slate-500 mt-2 mb-6">
+    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Page Not Found</h1>
+    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 mb-6">
       The campus page or resource you requested does not exist or has been moved.
     </p>
     <Link
       to="/"
-      className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition"
+      className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition shadow-sm"
     >
       Return to Campus Hub
     </Link>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import {
   User,
   Mail,
@@ -11,6 +12,8 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import Spinner from '../../components/common/Spinner';
 
@@ -36,6 +39,7 @@ const ACADEMIC_YEARS = [
 
 const RegisterPage = () => {
   const { register } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -98,8 +102,20 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center py-8 px-4">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen bg-[#F5F7FC] dark:bg-[#0F172A] text-[#172033] dark:text-[#F1F5F9] transition-colors duration-200 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          className="p-2.5 rounded-2xl text-slate-700 dark:text-amber-400 bg-white dark:bg-[#1E293B] hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-[#334155] shadow-xs transition flex items-center justify-center"
+        >
+          {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
+        </button>
+      </div>
+
+      <div className="w-full max-w-lg mx-auto">
         <div className="text-center mb-6">
           <div className="inline-flex w-16 h-16 rounded-2xl bg-white p-1 shadow-md border border-slate-200/80 dark:border-slate-700 items-center justify-center mb-3 transition-transform hover:scale-105">
             <img

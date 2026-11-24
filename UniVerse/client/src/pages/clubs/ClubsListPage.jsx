@@ -70,7 +70,7 @@ const ClubsListPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-850 p-1.5 rounded-2xl w-full sm:w-auto">
           <Link
@@ -107,17 +107,16 @@ const ClubsListPage = () => {
         </div>
       </div>
 
-      <div className="relative rounded-3xl bg-gradient-to-br from-navy-900 via-navy-850 to-brand-950 p-8 sm:p-10 text-white overflow-hidden shadow-xl border border-navy-800">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="max-w-3xl space-y-3 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11px] font-bold tracking-wider uppercase text-brand-300 border border-white/10">
-            <Award className="w-3.5 h-3.5" />
-            <span>Institutionally Chartered Organizations</span>
+      <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-[#172033] border border-slate-200/90 dark:border-[#334155] p-6 sm:p-8 shadow-xs transition-colors duration-200">
+        <div className="max-w-3xl space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-xs font-bold tracking-wider uppercase">
+            <Award className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+            <span>Student Leadership & Chartered Clubs</span>
           </div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Official College Clubs
           </h1>
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-600 dark:text-[#A8B4C7] text-sm sm:text-base leading-relaxed">
             Discover student-led clubs officially recognized by college administration. Every chartered club is supported by an appointed Faculty Advisor, an established student leadership hierarchy, and verified campus activities.
           </p>
         </div>

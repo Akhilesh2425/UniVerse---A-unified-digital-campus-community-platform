@@ -75,17 +75,17 @@ const MyGroupsPage = () => {
 
   return (
     <div className="space-y-8 pb-16">
-      <div className="bg-gradient-to-r from-navy via-brand-950 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-xl relative overflow-hidden border border-brand-800/30">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-[#172033] border border-slate-200/90 dark:border-[#334155] p-6 sm:p-8 shadow-xs transition-colors duration-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30">
-              <Users className="w-3.5 h-3.5" />
-              My Campus Memberships
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 uppercase tracking-wider">
+              <Users className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+              Student Communities & Memberships
             </div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               My Groups & Communities
             </h1>
-            <p className="text-slate-300 text-sm sm:text-base max-w-xl leading-relaxed">
+            <p className="text-slate-600 dark:text-[#A8B4C7] text-sm sm:text-base max-w-xl leading-relaxed">
               Manage all campus clubs, technical societies, and study groups you belong to or lead.
             </p>
           </div>
@@ -93,21 +93,20 @@ const MyGroupsPage = () => {
           <div className="flex items-center gap-3">
             <Link
               to="/groups"
-              className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold backdrop-blur-md border border-white/20 transition flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1E293B] dark:hover:bg-slate-700/80 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-[#334155] transition flex items-center gap-2 shadow-xs"
             >
-              <Compass className="w-4 h-4" />
+              <Compass className="w-4 h-4 text-brand-500" />
               Explore All
             </Link>
             <Link
               to="/groups/create"
-              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-lg shadow-brand-600/30 transition flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-sm shadow-brand-600/30 transition flex items-center gap-2"
             >
               <PlusCircle className="w-4 h-4" />
               Create Group
             </Link>
           </div>
         </div>
-        <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
       {feedback && (

@@ -475,7 +475,7 @@ const IssueDetailsPage = () => {
 
           <div className="hidden md:block absolute top-[34px] left-[7%] right-[7%] h-0.5 bg-slate-200 dark:bg-slate-700 z-0">
             <div
-              className="h-full bg-linear-to-r from-emerald-500 to-brand-600 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-emerald-500 to-brand-600 transition-all duration-500"
               style={{
                 width: `${Math.max(
                   0,
@@ -544,7 +544,7 @@ const IssueDetailsPage = () => {
           </div>
 
           {(issue.status === 'resolved' || issue.status === 'closed') && issue.resolution?.summary && (
-            <div className="bg-linear-to-br from-emerald-50 via-teal-50/50 to-emerald-50/30 dark:from-emerald-950/50 dark:via-teal-950/40 dark:to-emerald-950/30 rounded-3xl p-6 sm:p-8 border border-emerald-300/80 dark:border-emerald-800 shadow-sm space-y-4">
+            <div className="bg-gradient-to-br from-emerald-50 via-teal-50/50 to-emerald-50/30 dark:from-emerald-950/50 dark:via-teal-950/40 dark:to-emerald-950/30 rounded-3xl p-6 sm:p-8 border border-emerald-300/80 dark:border-emerald-800 shadow-sm space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
                   <CheckCircle className="w-6 h-6" />

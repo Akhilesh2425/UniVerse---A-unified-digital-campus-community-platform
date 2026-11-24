@@ -168,30 +168,31 @@ const EventDetailsPage = () => {
 
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
         {event.posterUrl ? (
-          <div className="w-full h-64 sm:h-80 relative overflow-hidden bg-slate-900">
+          <div className="w-full min-h-[220px] sm:min-h-[280px] relative overflow-hidden bg-slate-900 flex flex-col justify-end p-6 sm:p-8">
             <img
               src={event.posterUrl}
               alt={event.title}
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
-            <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
-              <div className="space-y-2">
-                <Badge variant={event.category} size="md">
-                  {event.category}
-                </Badge>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-md">
-                  {event.title}
-                </h1>
-              </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent" />
+            <div className="relative z-10 space-y-2 max-w-3xl">
+              <Badge variant={event.category} size="md">
+                {event.category}
+              </Badge>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-md">
+                {event.title}
+              </h1>
             </div>
           </div>
         ) : (
-          <div className="bg-gradient-to-r from-navy-950 via-slate-900 to-brand-950 text-white p-8 sm:p-10">
+          <div className="bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 transition-colors">
             <Badge variant={event.category} size="md">
               {event.category}
             </Badge>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-3">
               {event.title}
             </h1>
           </div>

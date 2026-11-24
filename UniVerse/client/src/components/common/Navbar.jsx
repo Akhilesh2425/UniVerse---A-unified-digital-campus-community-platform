@@ -93,10 +93,10 @@ const Navbar = () => {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-base sm:text-lg font-extrabold tracking-tight text-[#172554] dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                <span className="text-base sm:text-lg font-extrabold tracking-tight text-[#172554] dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors leading-tight">
                   Uni<span className="text-brand-600 dark:text-brand-400">Verse</span>
                 </span>
-                <span className="text-[8px] sm:text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-[#A8B4C7] -mt-1">
+                <span className="text-[8px] sm:text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-[#A8B4C7] leading-none mt-0.5">
                   Campus Platform
                 </span>
               </div>
@@ -496,7 +496,7 @@ const Navbar = () => {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1322] px-4 pt-3 pb-6 space-y-2 transition-colors">
+        <div className="lg:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1322] px-4 pt-3 pb-6 space-y-2 transition-colors">
           <div className="mb-3">
             <GlobalSearchInput isMobile={true} onCloseMobile={() => setMobileMenuOpen(false)} />
           </div>
